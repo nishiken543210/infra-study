@@ -42,7 +42,7 @@
   const html = `
 <nav class="sb-nav">
   <div class="sb-logo">
-    <div class="sb-logo-title">自宅サーバで学ぶ<br>実践インフラ入門</div>
+    <div class="sb-logo-title">サーバを動かしながら学ぶ<br>実践インフラ入門</div>
     <div class="sb-logo-sub">infra-study.org</div>
   </div>
   <div class="sb-section">
@@ -105,9 +105,11 @@
   navWrap.innerHTML = html;
   document.body.insertBefore(navWrap.firstElementChild, document.body.firstChild);
 
-  // メインコンテンツにsb-main-wrapクラスを付与（bodyの直接の子で最初のmain/divを対象）
-  const main = document.querySelector('main') || document.querySelector('body > div:not(.sb-nav)');
-  if (main) main.classList.add('sb-main-wrap');
+  // メインコンテンツにsb-main-wrapクラスを付与（既にある場合はスキップ）
+  const main = document.querySelector('.sb-main-wrap') ||
+               document.querySelector('main') ||
+               document.querySelector('body > div:not(.sb-nav)');
+  if (main && !main.classList.contains('sb-main-wrap')) main.classList.add('sb-main-wrap');
 
   // アクティブ判定
   const page = document.body.getAttribute('data-page') || '';
