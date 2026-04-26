@@ -2,21 +2,317 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>iframeテスト</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 1-3 — ストレージサーバを見つける</title>
 <style>
-body { margin: 0; display: flex; height: 100vh; background: #0d1117; }
-.left  { flex: 1; padding: 40px; color: #e2eaf3; font-family: sans-serif; }
-.right { flex: 1; border-left: 1px solid #2a3441; }
-iframe { width: 100%; height: 100%; border: none; }
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #0d1117; --bg2: #161b22; --bg3: #1c2230;
+  --border: #2a3441; --text: #e2eaf3; --muted: #9aacbc;
+  --accent: #58a6ff; --green: #3fb950; --amber: #d29922;
+  --purple: #bc8cff; --coral: #f78166;
+  --sidebar-w: 240px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%; overflow: hidden;
+  background: var(--bg); color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif; font-weight: 300;
+}
+body { display: flex; }
+
+/* ════ メインラッパー（サイドバーの右側全体） ════ */
+.sb-main-wrap {
+  margin-left: var(--sidebar-w);
+  flex: 1; display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden;
+}
+
+/* ════ タブバー ════ */
+.tab-bar {
+  display: flex; align-items: stretch;
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  flex-shrink: 0; padding: 0 4px;
+}
+.tab-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 0 20px; height: 44px;
+  font-size: 13px; font-family: 'Noto Sans JP', sans-serif; font-weight: 400;
+  color: var(--muted); background: none; border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer; transition: all 0.15s;
+  white-space: nowrap; margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--text); background: var(--bg3); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-btn .ti { font-size: 13px; }
+
+.tab-divider { width: 1px; background: var(--border); margin: 8px 4px; }
+.tab-spacer { flex: 1; }
+
+.tab-meta {
+  display: flex; align-items: center; gap: 10px; padding: 0 16px;
+}
+.tab-chapter {
+  font-size: 11px; color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.tab-badge {
+  font-size: 10px; padding: 2px 9px; border-radius: 99px;
+  background: #1c2616; color: var(--green); border: 1px solid #2a4020;
+}
+.tab-badge.real {
+  background: #1c0e0a; color: var(--coral); border-color: #3a1a10;
+}
+
+/* ════ パネル共通 ════ */
+.panel { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+.panel.active { display: flex; }
+
+/* ════ 説明パネル ════ */
+.content-scroll {
+  flex: 1; overflow-y: auto; padding: 36px 44px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.content-scroll::-webkit-scrollbar { width: 4px; }
+.content-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* パンくず */
+.breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--muted); margin-bottom: 28px;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+
+.lesson-tags { display: flex; gap: 8px; margin-bottom: 12px; }
+.ltag {
+  font-size: 11px; padding: 3px 10px; border-radius: 99px;
+  background: #1c2616; color: var(--green); border: 1px solid #2a4020;
+}
+.ltag.blue { background: #1c2d3d; color: var(--accent); border-color: #2a4060; }
+
+h1 { font-size: 24px; font-weight: 500; color: #e6edf3; margin-bottom: 6px; line-height: 1.3; }
+.subtitle { font-size: 13px; color: var(--muted); margin-bottom: 32px; }
+
+/* 目的ボックス */
+.purpose-box {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: #161c2a; border: 1px solid #2a3d6e; border-left: 3px solid var(--accent);
+  border-radius: 0 10px 10px 0; padding: 16px 18px; margin-bottom: 28px;
+}
+.purpose-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.purpose-title { font-size: 12px; color: var(--accent); font-weight: 500; margin-bottom: 5px; letter-spacing: 0.04em; }
+.purpose-body { font-size: 13px; color: var(--text); line-height: 1.85; }
+.purpose-body strong { color: #e6edf3; font-weight: 500; }
+
+/* セクションラベル */
+.section-label {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 10px; color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.12em; margin-bottom: 14px;
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.step-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 500; color: var(--accent); flex-shrink: 0;
+}
+
+/* 説明テキスト */
+.expl {
+  background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0; padding: 13px 16px;
+  font-size: 13px; color: var(--text); line-height: 1.85; margin-bottom: 14px;
+}
+.expl.green { border-left-color: var(--green); }
+.expl code {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  background: #0d1117; border: 1px solid var(--border); padding: 1px 5px;
+  border-radius: 4px; color: var(--purple);
+}
+.expl strong { color: #e6edf3; font-weight: 500; }
+
+/* コマンドブロック */
+.cmd-block {
+  background: #090d13; border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; margin-bottom: 14px;
+}
+.cmd-header {
+  display: flex; align-items: center; gap: 8px; padding: 9px 16px;
+  background: var(--bg3); border-bottom: 1px solid var(--border);
+  font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot.r { background: #f85149; } .dot.y { background: #d29922; } .dot.g { background: #3fb950; }
+.cmd-body { padding: 16px 18px; }
+.cmd-prompt { color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 13px; user-select: none; }
+.cmd-text { color: #e6edf3; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+
+/* ターミナルへのボタン */
+.goto-terminal {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border-radius: 8px; margin-top: 10px;
+  background: #1c2d3d; border: 1px solid var(--accent); color: var(--accent);
+  font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer; transition: all 0.15s;
+}
+.goto-terminal:hover { background: #1e3550; }
+
+/* 次へ */
+.next-lesson {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 18px; margin-top: 40px;
+}
+.next-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.next-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.next-btn {
+  padding: 8px 18px; border-radius: 6px;
+  background: #1c2d3d; border: 1px solid var(--accent); color: var(--accent);
+  font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.next-btn:hover { background: #1e3550; }
+
+/* ════ ターミナルパネル ════ */
+.terminal-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.terminal-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px; background: var(--bg3); border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.terminal-topbar-left { display: flex; align-items: center; gap: 8px; }
+.terminal-label { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.terminal-hint { font-size: 11px; color: var(--muted); }
+.terminal-hint kbd {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 3px; padding: 1px 5px; color: var(--text);
+}
+.terminal-iframe { flex: 1; border: none; width: 100%; }
 </style>
 </head>
-<body>
-  <div class="left">
-    <h2>左ペイン：説明エリア</h2>
-    <p>右にGuacamoleが表示されていればOKです。</p>
+<body data-page="test_iframe.html">
+
+<!-- メインラッパー（sidebar.jsがサイドバーを注入する） -->
+<div class="sb-main-wrap">
+
+  <!-- タブバー -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('content')" id="tab-content">
+      <span class="ti">📖</span> 説明
+    </button>
+    <div class="tab-divider"></div>
+    <button class="tab-btn" onclick="switchTab('terminal')" id="tab-terminal">
+      <span class="ti">💻</span> ターミナル
+    </button>
+    <div class="tab-spacer"></div>
+    <div class="tab-meta">
+      <span class="tab-chapter">lesson_03</span>
+      <span class="tab-badge">Part 1 — iSCSI</span>
+      <span class="tab-badge real">実機</span>
+    </div>
   </div>
-  <div class="right">
-    <iframe src="https://infra-study.org/guacamole/"></iframe>
+
+  <!-- ════ 説明パネル ════ -->
+  <div class="panel active" id="panel-content">
+    <div class="content-scroll">
+
+      <div class="breadcrumb">
+        <a href="index.html">コース概要</a> › <a href="intro.html">操作入門</a> › Chapter 1-3
+      </div>
+
+      <div class="lesson-tags">
+        <span class="ltag">Part 1 — iSCSI</span>
+        <span class="ltag blue">Chapter 1-3</span>
+      </div>
+      <h1>ストレージサーバを見つける</h1>
+      <p class="subtitle">コマンド1本で「ネットワーク上のディスク提供サーバ」を探し出す手順を学びます</p>
+
+      <div class="purpose-box">
+        <span class="purpose-icon">🎯</span>
+        <div>
+          <div class="purpose-title">このレッスンでできるようになること</div>
+          <div class="purpose-body">
+            あなたのVMから、ネットワーク上にある<strong>ストレージサーバに「そこにいますか？」と問い合わせ</strong>、接続先の情報を取得できるようになります。これがiSCSIでディスクを使う<strong>最初の必須ステップ</strong>です。これが通らないと、次のログイン・マウントに進めません。
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label"><span class="step-dot">1</span>コマンドを打つと何が起きるか</div>
+      <div class="expl">
+        このコマンドは、あなたのVMから指定したIPアドレスのサーバに向かって「ディスクを提供できますか？」と問い合わせます。サーバが応答すると、<strong>接続に必要な名前（IQN）</strong>が返ってきます。IQNとは「このストレージサーバの固有ID」のようなものです。次のステップでこのIDを使って実際に接続します。
+      </div>
+
+      <div class="section-label"><span class="step-dot">2</span>コマンドの構造</div>
+      <div class="cmd-block">
+        <div class="cmd-header">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span>receiver-vm — bash</span>
+        </div>
+        <div class="cmd-body">
+          <span class="cmd-prompt">$ </span>
+          <span class="cmd-text">sudo iscsiadm -m discovery -t sendtargets -p 192.168.1.201</span>
+        </div>
+      </div>
+
+      <div class="expl green">
+        成功すると<strong>接続名（IQN）</strong>（例：<code>iqn.2024-01.local:storage</code>）と接続先IPが返ってきます。この接続名を使って次のステップ「ログイン（実際に繋ぐ）」に進みます。
+      </div>
+
+      <div class="section-label"><span class="step-dot">3</span>実際に打ってみる</div>
+      <div class="expl">
+        右の「ターミナル」タブに切り替えて、演習VMにログインしてからコマンドを実行してください。<br>
+        ターミナルの黒い画面を<strong>クリックしてからキーボード入力</strong>してください。
+      </div>
+
+      <button class="goto-terminal" onclick="switchTab('terminal')">
+        💻 ターミナルタブを開いて実行する →
+      </button>
+
+      <div class="next-lesson">
+        <div>
+          <div class="next-label">NEXT LESSON</div>
+          <div class="next-title">Chapter 1-4 — ログインして /dev/sdb として認識させる</div>
+        </div>
+        <button class="next-btn">次へ →</button>
+      </div>
+
+    </div>
   </div>
+
+  <!-- ════ ターミナルパネル ════ -->
+  <div class="panel" id="panel-terminal">
+    <div class="terminal-wrap">
+      <div class="terminal-topbar">
+        <div class="terminal-topbar-left">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="terminal-label">SSH Terminal — 演習VM（Guacamole）</span>
+        </div>
+        <span class="terminal-hint">操作前に画面をクリック &nbsp;|&nbsp; キャンセル <kbd>Ctrl</kbd>+<kbd>C</kbd> &nbsp;|&nbsp; 説明に戻る <button onclick="switchTab('content')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:11px;font-family:inherit">← 説明タブ</button></span>
+      </div>
+      <iframe
+        class="terminal-iframe"
+        src="https://infra-study.org/guacamole/"
+        allow="fullscreen">
+      </iframe>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+}
+</script>
+<script src="sidebar.js"></script>
 </body>
 </html>
