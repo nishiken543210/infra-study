@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自宅サーバで学ぶ実践インフラ入門</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #0d1117; --bg2: #161b22; --bg3: #1c2230;
+  --border: #2a3441; --text: #e2eaf3; --muted: #9aacbc;
+  --accent: #58a6ff; --green: #3fb950; --amber: #d29922;
+  --purple: #bc8cff; --coral: #f78166;
+  --sidebar-w: 240px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif; font-weight: 300;
+  line-height: 1.7; min-height: 100vh; display: flex;
+}
+
+/* ═══ サイドバーは sidebar.js が注入 ═══ */
+.main { margin-left: var(--sidebar-w); flex: 1; }
+.content { max-width: 720px; padding: 52px 40px 100px; }
+
+.hero-eyebrow { font-size: 11px; letter-spacing: 0.14em; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; }
+h1 { font-size: 30px; font-weight: 500; color: #e6edf3; line-height: 1.25; margin-bottom: 14px; }
+h1 span { color: var(--accent); }
+.hero-desc { font-size: 14px; color: var(--muted); max-width: 520px; line-height: 1.9; margin-bottom: 24px; }
+.hero-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 44px; }
+.badge { font-size: 11px; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--border); color: var(--muted); }
+.badge.hl { border-color: #2a4060; color: var(--accent); background: #1c2d3d; }
+
+.section { margin-bottom: 52px; }
+.section-title {
+  font-size: 11px; letter-spacing: 0.1em; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 18px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ゴール */
+.goal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.goal-item { display: flex; gap: 10px; align-items: flex-start; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+.goal-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+.goal-text { font-size: 12px; color: var(--text); line-height: 1.7; }
+.goal-text strong { color: #e6edf3; font-weight: 500; display: block; margin-bottom: 2px; font-size: 13px; }
+
+/* 構成図 */
+.arch-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 22px 14px; }
+
+/* ─── 「とは」A案：ツールチップ ─── */
+.sample-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--amber); background: #1c1a0d;
+  border: 1px solid #3a3010; border-radius: 6px; padding: 3px 10px; margin-bottom: 12px;
+}
+.tw { position: relative; display: inline; }
+.tt {
+  border-bottom: 1px dashed var(--accent); color: var(--accent);
+  cursor: help;
+}
+.tb {
+  display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%);
+  background: #1c2d3d; border: 1px solid #2a4060; border-radius: 8px;
+  padding: 10px 14px; font-size: 12px; color: var(--text); line-height: 1.7;
+  width: 250px; z-index: 200; pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+.tb::after {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: #2a4060;
+}
+.tw:hover .tb { display: block; }
+.tb-term { font-size: 10px; color: var(--accent); font-weight: 500; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.sample-text {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px 20px; font-size: 14px; line-height: 2.1; color: var(--text);
+}
+
+/* ─── 前提説明 ─── */
+.prereq-text {
+  font-size: 14px; line-height: 2.1; color: var(--text);
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px 20px; margin-bottom: 16px;
+}
+.prereq-flow {
+  display: flex; align-items: center; gap: 0;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 20px 24px; margin-bottom: 16px;
+}
+.pf-node {
+  flex: 1; text-align: center;
+}
+.pf-icon { font-size: 28px; margin-bottom: 6px; }
+.pf-label { font-size: 13px; font-weight: 500; color: #e6edf3; margin-bottom: 4px; }
+.pf-sub { font-size: 11px; color: var(--muted); }
+.pf-arrow {
+  flex: 0 0 120px; display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+}
+.pf-arrow-line {
+  width: 100%; height: 2px; background: var(--muted);
+  position: relative;
+}
+.pf-arrow-line::after {
+  content: '▶'; position: absolute; right: -6px; top: 50%;
+  transform: translateY(-50%); font-size: 10px; color: var(--muted);
+}
+.pf-network { background: var(--accent); }
+.pf-network::after { color: var(--accent); }
+.pf-arrow-tag { font-size: 10px; color: var(--muted); text-align: center; }
+.prereq-point {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: #161c2a; border: 1px solid #2a3d6e; border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0; padding: 14px 18px;
+  font-size: 13px; color: var(--text); line-height: 1.8;
+}
+.prereq-point strong { color: #e6edf3; font-weight: 500; }
+.pp-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+/* ── インフラ業種 ── */
+.infra-roles {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;
+}
+.ir-item {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+}
+.ir-server  { border-top: 2px solid var(--purple); }
+.ir-network { border-top: 2px solid var(--accent); }
+.ir-storage { border-top: 2px solid var(--green); }
+.ir-icon { font-size: 22px; margin-bottom: 6px; }
+.ir-name { font-size: 13px; font-weight: 500; color: #e6edf3; margin-bottom: 6px; }
+.ir-desc { font-size: 12px; color: var(--muted); line-height: 1.7; margin-bottom: 8px; }
+.ir-tag {
+  font-size: 10px; padding: 2px 8px; border-radius: 99px; display: inline-block;
+  background: var(--bg3); color: var(--muted); border: 1px solid var(--border);
+}
+.ir-this { background: #1c2616; color: var(--green); border-color: #2a4020; }
+
+/* ── 日常作業フロー ── */
+.infra-day {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 20px 22px; margin-bottom: 16px;
+}
+.infra-day-title { font-size: 13px; font-weight: 500; color: #e6edf3; margin-bottom: 16px; }
+.infra-day-flow { display: flex; flex-direction: column; gap: 0; }
+.idf-step {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 12px 14px; border-radius: 8px; background: var(--bg3);
+}
+.idf-highlight { background: #0e1c0d; border: 1px solid #2a4020; }
+.idf-arrow { text-align: center; color: var(--border); font-size: 16px; padding: 4px 0 4px 20px; }
+.idf-num {
+  width: 24px; height: 24px; border-radius: 50%; background: var(--bg);
+  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 500; color: var(--muted); flex-shrink: 0; margin-top: 1px;
+}
+.idf-highlight .idf-num { border-color: #2a4020; color: var(--green); background: #0e1c0d; }
+.idf-title { font-size: 13px; font-weight: 500; color: #e6edf3; margin-bottom: 3px; }
+.idf-highlight .idf-title { color: #6fd672; }
+.idf-desc { font-size: 12px; color: var(--muted); line-height: 1.7; }
+.idf-desc strong { color: var(--text); font-weight: 500; }
+
+/* ── なぜ学ぶか ── */
+.infra-why {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: #161c2a; border: 1px solid #2a3d6e; border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0; padding: 14px 18px;
+  font-size: 13px; color: var(--text); line-height: 1.8;
+}
+.infra-why strong { color: #e6edf3; font-weight: 500; }
+.iw-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+/* スタート */
+.start-area { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding-top: 8px; }
+.start-note { font-size: 13px; color: var(--muted); }
+.start-btn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px;
+  border-radius: 8px; background: var(--accent); color: #0d1117;
+  font-size: 14px; font-weight: 500; font-family: 'Noto Sans JP', sans-serif;
+  border: none; cursor: pointer; text-decoration: none; transition: opacity 0.15s;
+}
+.start-btn:hover { opacity: 0.88; }
+</style>
+</head>
+<body data-page="index.html">
+
+<!-- ═══ メイン ═══ -->
+<main class="main sb-main-wrap">
+<div class="content">
+
+  <p class="hero-eyebrow">Course Overview</p>
+  <h1>自宅サーバで<span>本物のインフラ</span>を<br>動かしながら学ぶ</h1>
+  <p class="hero-desc">クラウドのシミュレータではなく、実際の物理サーバ上でストレージ・ネットワーク・仮想化を操作するコースです。「コマンドを打ったら本当に何かが変わる」体験を通して、インフラの仕組みを体で覚えていきます。</p>
+  <div class="hero-badges">
+    <span class="badge hl">実機操作</span>
+    <span class="badge hl">ブラウザだけで完結</span>
+    <span class="badge">環境構築不要</span>
+    <span class="badge">全16章 / 推定30〜40時間</span>
+    <span class="badge">前提：Linux基礎コマンドのみ</span>
+  </div>
+
+  <!-- インフラ業種とストレージの位置づけ -->
+  <div class="section">
+    <p class="section-title">インフラエンジニアとはどんな仕事か</p>
+
+    <div class="infra-roles">
+      <div class="ir-item ir-server">
+        <div class="ir-icon">🖥️</div>
+        <div class="ir-name">サーバーエンジニア</div>
+        <div class="ir-desc">OSのセットアップ・ミドルウェア管理・障害対応。日常作業の中心はLinuxのコマンド操作。</div>
+        <div class="ir-tag ir-this">← このコースの中心</div>
+      </div>
+      <div class="ir-item ir-network">
+        <div class="ir-icon">🌐</div>
+        <div class="ir-name">ネットワークエンジニア</div>
+        <div class="ir-desc">ルーター・スイッチの設定、VLAN設計、障害切り分け。L2/L3の知識が必須。</div>
+        <div class="ir-tag ir-this">← Part 2 で体験</div>
+      </div>
+      <div class="ir-item ir-storage">
+        <div class="ir-icon">💾</div>
+        <div class="ir-name">ストレージエンジニア</div>
+        <div class="ir-desc">SAN/NASの設計・運用、LUN割り当て、バックアップ設計。サーバーエンジニアと兼務することが多い。</div>
+        <div class="ir-tag ir-this">← Part 1 で体験</div>
+      </div>
+      <div class="ir-item">
+        <div class="ir-icon">☁️</div>
+        <div class="ir-name">クラウドエンジニア</div>
+        <div class="ir-desc">AWS・GCP・Azureの設計・構築・運用。オンプレの知識が土台になる。</div>
+        <div class="ir-tag">このコースが土台に</div>
+      </div>
+      <div class="ir-item">
+        <div class="ir-icon">🔒</div>
+        <div class="ir-name">セキュリティエンジニア</div>
+        <div class="ir-desc">脆弱性診断・権限設計・インシデント対応。OS・NW・ストレージ全域の知識が必要。</div>
+        <div class="ir-tag">権限設計は Part 3 で</div>
+      </div>
+      <div class="ir-item">
+        <div class="ir-icon">⚙️</div>
+        <div class="ir-name">SRE / DevOps</div>
+        <div class="ir-desc">インフラの自動化・監視・信頼性向上。サーバー・NW・ストレージを横断的に扱う。</div>
+        <div class="ir-tag">監視は Part 3 で</div>
+      </div>
+    </div>
+
+    <div class="infra-day">
+      <div class="infra-day-title">📋 サーバーエンジニアの日常作業イメージ</div>
+      <div class="infra-day-flow">
+        <div class="idf-step">
+          <div class="idf-num">1</div>
+          <div class="idf-body">
+            <div class="idf-title">サーバーにログイン</div>
+            <div class="idf-desc">SSH でサーバーに接続。ここからすべての作業は<strong>Linuxコマンド操作</strong>。</div>
+          </div>
+        </div>
+        <div class="idf-arrow">↓</div>
+        <div class="idf-step">
+          <div class="idf-num">2</div>
+          <div class="idf-body">
+            <div class="idf-title">OS・ミドルウェアの操作</div>
+            <div class="idf-desc">プロセス確認・ログ調査・設定変更など。作業時間の大半がここ。</div>
+          </div>
+        </div>
+        <div class="idf-arrow">↓</div>
+        <div class="idf-step idf-highlight">
+          <div class="idf-num">3</div>
+          <div class="idf-body">
+            <div class="idf-title">ストレージの操作 ← このコースで学ぶ</div>
+            <div class="idf-desc">ディスクの追加・マウント・容量拡張・LUN割り当て。<strong>OSの操作と一体</strong>で行われる。サーバーが止まる障害の多くがストレージ絡み。</div>
+          </div>
+        </div>
+        <div class="idf-arrow">↓</div>
+        <div class="idf-step idf-highlight">
+          <div class="idf-num">4</div>
+          <div class="idf-body">
+            <div class="idf-title">ネットワークの確認・設定 ← このコースで学ぶ</div>
+            <div class="idf-desc">IPアドレス・ルーティング・VLANの確認。ストレージもネットワーク経由で繋がっているため、切り離せない知識。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="infra-why">
+      <span class="iw-icon">💡</span>
+      <div>
+        <strong>ストレージをLinuxから操作する</strong>のは、サーバーエンジニアの基本スキルです。クラウドでも「EBSをマウントする」「NFSを設定する」など同じ概念が出てきます。<strong>実機でコマンドを打って体で覚えた知識</strong>は、クラウドでも現場でも直接使えます。
+      </div>
+    </div>
+  </div>
+
+  <!-- ゴール -->
+  <div class="section">
+    <p class="section-title">このコースを終えるとできること</p>
+    <div class="goal-grid">
+      <div class="goal-item"><span class="goal-icon">💾</span><div class="goal-text"><strong>ネットワーク越しにディスクを使う</strong>iSCSI でサーバのディスクをネットワーク経由でマウントし、読み書きできる</div></div>
+      <div class="goal-item"><span class="goal-icon">🌐</span><div class="goal-text"><strong>Linux で L2/L3 ネットワークを作る</strong>仮想スイッチ・ルータを Linux で構築し、VLAN・ルーティングを設定できる</div></div>
+      <div class="goal-item"><span class="goal-icon">🔧</span><div class="goal-text"><strong>障害を自分で再現・切り分ける</strong>意図的に遅延やパケットロスを起こし、原因を特定して復旧できる</div></div>
+      <div class="goal-item"><span class="goal-icon">🖥️</span><div class="goal-text"><strong>仮想化基盤の権限設計を理解する</strong>Proxmox の権限モデルでユーザーを分離し、クラウド IAM との共通点を理解できる</div></div>
+    </div>
+  </div>
+
+  <!-- 構成図 -->
+  <div class="section">
+    <p class="section-title">学習環境の全体像</p>
+    <div class="arch-box">
+      <svg width="100%" viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#58a6ff" stroke-width="1.5" stroke-linecap="round"/></marker>
+          <marker id="arr-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#3fb950" stroke-width="1.5" stroke-linecap="round"/></marker>
+        </defs>
+        <rect x="10" y="82" width="106" height="52" rx="8" fill="#1c2230" stroke="#2a3441" stroke-width="1"/>
+        <text x="63" y="105" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="12" fill="#e2eaf3">あなたの</text>
+        <text x="63" y="123" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="12" fill="#e2eaf3">ブラウザ</text>
+        <line x1="118" y1="108" x2="146" y2="108" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="132" y="100" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="9" fill="#9aacbc">HTTPS</text>
+        <rect x="148" y="82" width="116" height="52" rx="8" fill="#1c2d3d" stroke="#2a4060" stroke-width="1.5"/>
+        <text x="206" y="105" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="11" fill="#8ecbff">Cloudflare</text>
+        <text x="206" y="123" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="11" fill="#8ecbff">Tunnel</text>
+        <line x1="266" y1="108" x2="294" y2="108" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="296" y="14" width="374" height="212" rx="10" fill="none" stroke="#2a3441" stroke-width="1" stroke-dasharray="5 3"/>
+        <text x="310" y="30" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#9aacbc">HP ML30 Gen10（Proxmox）</text>
+        <rect x="310" y="42" width="114" height="50" rx="8" fill="#2d1b69" stroke="#5a3d9e" stroke-width="1.5"/>
+        <text x="367" y="64" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="11" fill="#c4b5fd">Guacamole VM</text>
+        <text x="367" y="82" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#a78bfa">SSH/VNC 踏み台</text>
+        <line x1="367" y1="94" x2="367" y2="122" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr-g)"/>
+        <rect x="310" y="124" width="114" height="50" rx="8" fill="#1c2230" stroke="#2a3441" stroke-width="1"/>
+        <text x="367" y="147" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="11" fill="#e2eaf3">あなたの VM</text>
+        <text x="367" y="165" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#9aacbc">Ubuntu 22.04</text>
+        <line x1="426" y1="150" x2="454" y2="150" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arr-g)"/>
+        <text x="440" y="142" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="9" fill="#9aacbc">iSCSI</text>
+        <line x1="426" y1="162" x2="454" y2="192" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arr-g)"/>
+        <rect x="456" y="124" width="96" height="50" rx="8" fill="#1c2616" stroke="#2a5c1c" stroke-width="1.5"/>
+        <text x="504" y="147" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#6fd672">ストレージ</text>
+        <text x="504" y="162" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#6fd672">サーバ VM</text>
+        <text x="504" y="177" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#3fb950">targetcli</text>
+        <rect x="456" y="182" width="96" height="28" rx="8" fill="#1c2d3d" stroke="#2a4060" stroke-width="1.5"/>
+        <text x="504" y="201" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#8ecbff">NW 演習 VM</text>
+        <rect x="566" y="124" width="88" height="86" rx="8" fill="#1c2230" stroke="#2a3441" stroke-width="1"/>
+        <text x="610" y="160" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#9aacbc">物理</text>
+        <text x="610" y="175" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#9aacbc">ストレージ</text>
+        <text x="610" y="192" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#7a8fa3">LVM / HDD</text>
+        <line x1="554" y1="150" x2="564" y2="150" stroke="#2a3441" stroke-width="1" marker-end="url(#arr)"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ════ 前提知識：HDD と SCSI の関係 ════ -->
+  <div class="section">
+    <p class="section-title">このコースを始める前に知っておくこと</p>
+
+    <div class="prereq-text">
+      コンピュータが
+      <span class="tw"><span class="tt">ハードディスク（HDD）</span><span class="tb"><div class="tb-term">ハードディスク（HDD）とは</div>データを記録する部品。コンピュータの「引き出し」のようなもので、ファイルやOSを保存しておく。電源を切ってもデータが消えない。</span></span>
+      を使うには、「どう命令を送るか」という共通のルールが必要です。そのルールが
+      <span class="tw"><span class="tt">SCSI（スカジー）</span><span class="tb"><div class="tb-term">SCSI とは</div>コンピュータとディスクの間で命令をやり取りするための通信規格。「読み込め」「書き込め」などの命令を標準化したもの。1980年代から使われている歴史ある規格。</span></span>
+      です。
+    </div>
+
+    <div class="prereq-flow">
+      <div class="pf-node">
+        <div class="pf-icon">🖥️</div>
+        <div class="pf-label">コンピュータ</div>
+        <div class="pf-sub">「読み込め」と命令</div>
+      </div>
+      <div class="pf-arrow">
+        <div class="pf-arrow-line"></div>
+        <div class="pf-arrow-tag">SCSI命令</div>
+      </div>
+      <div class="pf-node">
+        <div class="pf-icon">💾</div>
+        <div class="pf-label">ハードディスク</div>
+        <div class="pf-sub">命令を受けてデータを返す</div>
+      </div>
+    </div>
+
+    <div class="prereq-text" style="margin-top:20px">
+      もともと SCSI はケーブルで直接繋ぐ方式でした。これを「ケーブルの代わりにネットワークで繋げるようにしたもの」が
+      <span class="tw"><span class="tt">iSCSI（アイスカジー）</span><span class="tb"><div class="tb-term">iSCSI とは</div>「internet SCSI」の略。SCSI命令をTCP/IPネットワーク上で送れるようにした規格。離れた場所にあるディスクをまるでローカルに繋がっているかのように使える。</span></span>
+      です。命令の中身（SCSI）は同じまま、届け方だけがネットワークになりました。
+    </div>
+
+    <div class="prereq-flow">
+      <div class="pf-node">
+        <div class="pf-icon">🖥️</div>
+        <div class="pf-label">あなたの VM</div>
+        <div class="pf-sub">「読み込め」と命令</div>
+      </div>
+      <div class="pf-arrow">
+        <div class="pf-arrow-line pf-network"></div>
+        <div class="pf-arrow-tag" style="color:var(--accent)">TCP/IPネットワーク経由</div>
+      </div>
+      <div class="pf-node">
+        <div class="pf-icon">🗄️</div>
+        <div class="pf-label">ストレージサーバ VM</div>
+        <div class="pf-sub">命令を受けてデータを返す</div>
+      </div>
+    </div>
+
+    <div class="prereq-point">
+      <span class="pp-icon">💡</span>
+      <div>このコースのゴールは、<strong>ケーブルなしでネットワーク越しにディスクを操作する</strong>ことです。あなたの VM から見ると、離れたサーバのディスクが「自分のパソコンに直接繋がっているディスク」と同じように見えます。</div>
+    </div>
+  </div>
+
+  <!-- スタート -->
+  <div class="start-area">
+    <p class="start-note">まずはブラウザからサーバへのログイン方法から始めましょう</p>
+    <a href="intro.html" class="start-btn">はじめる →</a>
+  </div>
+
+</div>
+</main>
+
+<script src="sidebar.js"></script>
+</body>
+</html>
