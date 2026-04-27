@@ -1,0 +1,301 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+/* ════════════════════════════════
+   CSS変数（カラーパレット）
+════════════════════════════════ */
+:root {
+  --bg: #0d1117; --bg2: #161b22; --bg3: #1c2230;
+  --border: #2a3441; --text: #e2eaf3; --muted: #9aacbc;
+  --accent: #58a6ff; --green: #3fb950; --amber: #d29922;
+  --purple: #bc8cff; --coral: #f78166;
+  --sidebar-w: 240px;
+}
+
+/* ════════════════════════════════
+   リセット・ベース
+════════════════════════════════ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg); color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif; font-weight: 300;
+  line-height: 1.7;
+}
+
+/* ════════════════════════════════
+   レイアウト（サイドバーあり）
+════════════════════════════════ */
+body.layout-lesson {
+  height: 100vh; overflow: hidden; display: flex;
+}
+body.layout-page {
+  min-height: 100vh; display: flex;
+}
+.sb-main-wrap {
+  margin-left: var(--sidebar-w);
+  flex: 1; display: flex; flex-direction: column;
+}
+body.layout-lesson .sb-main-wrap {
+  height: 100vh; overflow: hidden;
+}
+
+/* ════════════════════════════════
+   タブバー（レッスンページ用）
+════════════════════════════════ */
+.tab-bar {
+  display: flex; align-items: stretch;
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  flex-shrink: 0; padding: 0 4px;
+}
+.tab-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 0 20px; height: 44px;
+  font-size: 13px; font-family: 'Noto Sans JP', sans-serif; font-weight: 400;
+  color: var(--muted); background: none; border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer; transition: all 0.15s;
+  white-space: nowrap; margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--text); background: var(--bg3); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-btn .ti { font-size: 13px; }
+.tab-divider { width: 1px; background: var(--border); margin: 8px 4px; }
+.tab-spacer { flex: 1; }
+.tab-meta { display: flex; align-items: center; gap: 10px; padding: 0 16px; }
+.tab-chapter { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.tab-badge {
+  font-size: 10px; padding: 2px 9px; border-radius: 99px;
+  background: #1c2616; color: var(--green); border: 1px solid #2a4020;
+}
+.tab-badge.real { background: #1c0e0a; color: var(--coral); border-color: #3a1a10; }
+.tab-badge.blue { background: #1c2d3d; color: var(--accent); border-color: #2a4060; }
+
+/* ════════════════════════════════
+   パネル（タブ切り替え）
+════════════════════════════════ */
+.panel { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+.panel.active { display: flex; }
+.content-scroll {
+  flex: 1; overflow-y: auto; padding: 36px 44px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.content-scroll::-webkit-scrollbar { width: 4px; }
+.content-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ════════════════════════════════
+   共通テキストスタイル
+════════════════════════════════ */
+.breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--muted); margin-bottom: 28px;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+
+.lesson-tags { display: flex; gap: 8px; margin-bottom: 12px; }
+.ltag { font-size: 11px; padding: 3px 10px; border-radius: 99px; background: #1c2616; color: var(--green); border: 1px solid #2a4020; }
+.ltag.blue { background: #1c2d3d; color: var(--accent); border-color: #2a4060; }
+
+h1 { font-size: 24px; font-weight: 500; color: #e6edf3; margin-bottom: 6px; line-height: 1.3; }
+h2 { font-size: 20px; font-weight: 500; color: #e6edf3; margin-bottom: 12px; line-height: 1.4; }
+.subtitle { font-size: 13px; color: var(--muted); margin-bottom: 32px; }
+
+/* ════════════════════════════════
+   目的ボックス
+════════════════════════════════ */
+.purpose-box {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: #161c2a; border: 1px solid #2a3d6e; border-left: 3px solid var(--accent);
+  border-radius: 0 10px 10px 0; padding: 16px 18px; margin-bottom: 28px;
+}
+.purpose-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.purpose-title { font-size: 12px; color: var(--accent); font-weight: 500; margin-bottom: 5px; letter-spacing: 0.04em; }
+.purpose-body { font-size: 13px; color: var(--text); line-height: 1.85; }
+.purpose-body strong { color: #e6edf3; font-weight: 500; }
+
+/* ════════════════════════════════
+   セクションラベル
+════════════════════════════════ */
+.section-label {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 10px; color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.12em; margin-bottom: 14px;
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.step-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 500; color: var(--accent); flex-shrink: 0;
+}
+
+/* ════════════════════════════════
+   説明ボックス（expl）
+════════════════════════════════ */
+.expl {
+  background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0; padding: 13px 16px;
+  font-size: 13px; color: var(--text); line-height: 1.85; margin-bottom: 14px;
+}
+.expl.green { border-left-color: var(--green); }
+.expl.amber { border-left-color: var(--amber); }
+.expl code {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  background: #0d1117; border: 1px solid var(--border); padding: 1px 5px;
+  border-radius: 4px; color: var(--purple);
+}
+.expl strong { color: #e6edf3; font-weight: 500; }
+
+/* ════════════════════════════════
+   コマンドブロック
+════════════════════════════════ */
+.cmd-block {
+  background: #090d13; border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; margin-bottom: 14px;
+}
+.cmd-header {
+  display: flex; align-items: center; gap: 8px; padding: 9px 16px;
+  background: var(--bg3); border-bottom: 1px solid var(--border);
+  font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot.r { background: #f85149; } .dot.y { background: #d29922; } .dot.g { background: #3fb950; }
+.cmd-body { padding: 16px 18px; }
+.cmd-prompt { color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 13px; user-select: none; }
+.cmd-text { color: #e6edf3; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+.cmd-comment { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #3a4a5c; margin-left: 8px; }
+.cmd-output { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); line-height: 2; }
+.cmd-output .hl { color: var(--green); }
+
+/* ════════════════════════════════
+   ボタン類
+════════════════════════════════ */
+.goto-terminal {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border-radius: 8px; margin-top: 10px;
+  background: #1c2d3d; border: 1px solid var(--accent); color: var(--accent);
+  font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer; transition: all 0.15s;
+}
+.goto-terminal:hover { background: #1e3550; }
+
+.next-lesson {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 18px; margin-top: 40px;
+}
+.next-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.next-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.next-btn {
+  padding: 8px 18px; border-radius: 6px;
+  background: #1c2d3d; border: 1px solid var(--accent); color: var(--accent);
+  font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.next-btn:hover { background: #1e3550; }
+
+/* ════════════════════════════════
+   ターミナルパネル
+════════════════════════════════ */
+.terminal-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.terminal-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px; background: var(--bg3); border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.terminal-topbar-left { display: flex; align-items: center; gap: 8px; }
+.terminal-label { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.terminal-hint { font-size: 11px; color: var(--muted); }
+.terminal-hint kbd {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 3px; padding: 1px 5px; color: var(--text);
+}
+.terminal-iframe { flex: 1; border: none; width: 100%; }
+
+/* ════════════════════════════════
+   ツールチップ
+   使い方：
+   <span class="tw">
+     <span class="tt">用語</span>
+     <span class="tb">
+       <div class="tb-term">用語 とは</div>
+       説明文をここに書く
+     </span>
+   </span>
+════════════════════════════════ */
+.tw { position: relative; display: inline; }
+.tt {
+  border-bottom: 1px dashed var(--accent);
+  color: var(--accent); cursor: help;
+}
+.tb {
+  display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%);
+  background: #1c2d3d; border: 1px solid #2a4060; border-radius: 8px;
+  padding: 10px 14px; font-size: 12px; color: var(--text); line-height: 1.7;
+  width: 240px; z-index: 200; pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+.tb::after {
+  content: ''; position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: #2a4060;
+}
+.tw:hover .tb { display: block; }
+.tb-term {
+  font-size: 10px; color: var(--accent); font-weight: 500;
+  margin-bottom: 4px; letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+/* ════════════════════════════════
+   AIヒントパネル
+════════════════════════════════ */
+.hint-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 18px; border-radius: 8px; margin-top: 16px;
+  background: #1c1830; border: 1px solid var(--purple); color: var(--purple);
+  font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer; transition: all 0.15s;
+}
+.hint-btn:hover { background: #231a3d; }
+.hint-panel {
+  display: none; margin-top: 16px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+}
+.hint-panel.open { display: block; }
+.hint-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; background: #1c1830;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px; color: var(--purple);
+}
+.hint-messages {
+  padding: 14px 16px; max-height: 280px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.hint-msg {
+  font-size: 13px; line-height: 1.8; padding: 10px 14px;
+  border-radius: 8px; max-width: 90%;
+}
+.hint-msg.user { background: #1c2d3d; color: var(--accent); align-self: flex-end; border: 1px solid #2a4060; }
+.hint-msg.ai   { background: #1c1830; color: var(--text);   align-self: flex-start; border: 1px solid #2a2040; }
+.hint-msg.loading { color: var(--muted); font-style: italic; }
+.hint-input-row {
+  display: flex; gap: 8px; padding: 12px 16px;
+  border-top: 1px solid var(--border); background: var(--bg3);
+}
+.hint-input {
+  flex: 1; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 12px; color: var(--text);
+  font-size: 13px; font-family: 'Noto Sans JP', sans-serif; outline: none;
+}
+.hint-input:focus { border-color: var(--purple); }
+.hint-send {
+  padding: 8px 16px; border-radius: 6px;
+  background: var(--purple); border: none; color: #0d1117;
+  font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer; transition: opacity 0.15s; font-weight: 500;
+}
+.hint-send:hover { opacity: 0.85; }
+.hint-send:disabled { opacity: 0.4; cursor: not-allowed; }
