@@ -3,799 +3,273 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>iSCSI Discovery — iscsiadm コマンド実習</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
-
-:root {
-  --bg: #0d1117;
-  --bg2: #161b22;
-  --bg3: #1c2230;
-  --border: #2a3441;
-  --text: #cdd9e5;
-  --muted: #768390;
-  --accent: #58a6ff;
-  --green: #3fb950;
-  --amber: #d29922;
-  --red: #f85149;
-  --purple: #bc8cff;
-  --teal: #39d0c8;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-weight: 300;
-  line-height: 1.7;
-  min-height: 100vh;
-}
-
-.page {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 48px 24px 80px;
-}
-
-/* ── ヘッダー ── */
-.lesson-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-.tag {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  padding: 3px 10px;
-  border-radius: 99px;
-  background: #1c2d3d;
-  color: var(--accent);
-  border: 1px solid #2a4060;
-}
-.tag.storage { background: #1c2616; color: var(--green); border-color: #2a4020; }
-.chapter-num { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
-
-h1 {
-  font-size: 26px;
-  font-weight: 500;
-  color: #e6edf3;
-  margin-bottom: 6px;
-  line-height: 1.3;
-}
-.subtitle {
-  font-size: 14px;
-  color: var(--muted);
-  margin-bottom: 48px;
-}
-
-/* ── セクション共通 ── */
-.section {
-  margin-bottom: 48px;
-}
-.section-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 16px;
-}
-.section-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-.step-dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--accent);
-  flex-shrink: 0;
-}
-
-/* ── 図解アニメーションエリア ── */
-.diagram-box {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 32px 24px;
-  position: relative;
-  overflow: hidden;
-}
-.diagram-box::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent)40, transparent);
-}
-
-#diagram-svg {
-  width: 100%;
-  display: block;
-}
-
-/* ── ノード ── */
-.node-vm rect { fill: #1c2d3d; stroke: #2a4d6e; stroke-width: 1.5; }
-.node-vm text { fill: #8ecbff; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-.node-vm .label { fill: var(--muted); font-size: 11px; font-family: 'Noto Sans JP', sans-serif; }
-
-.node-target rect { fill: #1c2616; stroke: #2a5c1c; stroke-width: 1.5; }
-.node-target text { fill: #6fd672; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-.node-target .label { fill: var(--muted); font-size: 11px; font-family: 'Noto Sans JP', sans-serif; }
-
-/* アニメーション用 */
-@keyframes pulse-ring {
-  0%   { r: 8; opacity: 0.8; }
-  100% { r: 28; opacity: 0; }
-}
-@keyframes dash-travel {
-  to { stroke-dashoffset: -24; }
-}
-@keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes blink-cursor {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
-
-.probe-line {
-  stroke: var(--accent);
-  stroke-width: 2;
-  stroke-dasharray: 6 4;
-  fill: none;
-  animation: dash-travel 1.2s linear infinite;
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-.probe-line.active { opacity: 1; }
-
-.response-line {
-  stroke: var(--green);
-  stroke-width: 2;
-  stroke-dasharray: 6 4;
-  fill: none;
-  animation: dash-travel 1.2s linear infinite reverse;
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-.response-line.active { opacity: 1; }
-
-.pulse-circle {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 1;
-  opacity: 0;
-}
-.pulse-circle.active {
-  animation: pulse-ring 1.4s ease-out infinite;
-}
-
-.discovered-badge {
-  opacity: 0;
-  transition: opacity 0.6s;
-}
-.discovered-badge.active { opacity: 1; }
-
-.iqn-text {
-  opacity: 0;
-  transition: opacity 0.6s 0.3s;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  fill: var(--green);
-}
-.iqn-text.active { opacity: 1; }
-
-/* ── コントロール ── */
-.diagram-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 20px;
-}
-.ctrl-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 16px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--bg3);
-  color: var(--text);
-  font-size: 13px;
-  font-family: 'Noto Sans JP', sans-serif;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
-.ctrl-btn.primary { background: #1c2d3d; border-color: var(--accent); color: var(--accent); }
-.ctrl-btn.primary:hover { background: #1e3550; }
-
-.phase-indicator {
-  margin-left: auto;
-  font-size: 12px;
-  color: var(--muted);
-  font-family: 'JetBrains Mono', monospace;
-}
-.phase-dot {
-  display: inline-block;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--border);
-  margin: 0 2px;
-  transition: background 0.3s;
-}
-.phase-dot.active { background: var(--accent); }
-
-/* ── 解説テキスト ── */
-.explanation {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: 0 8px 8px 0;
-  padding: 16px 20px;
-  font-size: 14px;
-  line-height: 1.8;
-  color: var(--text);
-  margin-bottom: 12px;
-  transition: opacity 0.4s;
-}
-.explanation.highlight { border-left-color: var(--green); }
-.explanation strong { color: #e6edf3; font-weight: 500; }
-.explanation code {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  background: #0d1117;
-  border: 1px solid var(--border);
-  padding: 1px 6px;
-  border-radius: 4px;
-  color: var(--purple);
-}
-
-/* ── コマンドブロック ── */
-.cmd-block {
-  background: #090d13;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-.cmd-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: var(--bg3);
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  color: var(--muted);
-  font-family: 'JetBrains Mono', monospace;
-}
-.cmd-header .dot { width: 10px; height: 10px; border-radius: 50%; }
-.cmd-header .dot.r { background: #f85149; }
-.cmd-header .dot.y { background: #d29922; }
-.cmd-header .dot.g { background: #3fb950; }
-.cmd-body { padding: 20px 20px 16px; }
-.cmd-prompt {
-  color: var(--green);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  user-select: none;
-}
-.cmd-text {
-  color: #e6edf3;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-.cmd-cursor {
-  display: inline-block;
-  width: 8px; height: 16px;
-  background: var(--accent);
-  vertical-align: text-bottom;
-  animation: blink-cursor 1.2s step-end infinite;
-  border-radius: 1px;
-}
-.cmd-output {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 2;
-  opacity: 0;
-  transition: opacity 0.5s;
-}
-.cmd-output.visible { opacity: 1; }
-.cmd-output .out-iqn { color: var(--green); }
-.cmd-output .out-ip  { color: var(--accent); }
-.cmd-output .out-port{ color: var(--amber); }
-
-/* ── パラメータ解説テーブル ── */
-.param-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  margin-bottom: 8px;
-}
-.param-table th {
-  text-align: left;
-  padding: 8px 14px;
-  background: var(--bg3);
-  color: var(--muted);
-  font-weight: 400;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  border-bottom: 1px solid var(--border);
-}
-.param-table td {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
-}
-.param-table tr:last-child td { border-bottom: none; }
-.param-table td:first-child {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  color: var(--purple);
-  white-space: nowrap;
-  width: 220px;
-}
-.param-table td:last-child { color: var(--muted); line-height: 1.6; }
-
-.param-wrap {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-
-/* ── SSH操作パート ── */
-.hands-on-box {
-  background: var(--bg2);
-  border: 1px solid #2a5c1c;
-  border-radius: 12px;
-  padding: 24px;
-  position: relative;
-}
-.hands-on-box::before {
-  content: '⌨  SSH で実行';
-  position: absolute;
-  top: -1px; right: 20px;
-  background: #1c2616;
-  border: 1px solid #2a5c1c;
-  border-top: none;
-  padding: 0 12px;
-  font-size: 11px;
-  color: var(--green);
-  border-radius: 0 0 6px 6px;
-  letter-spacing: 0.04em;
-}
-.hands-on-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: #6fd672;
-  margin-bottom: 4px;
-}
-.hands-on-sub {
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 20px;
-}
-
-.show-output-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
-  border-radius: 6px;
-  border: 1px solid #2a5c1c;
-  background: #111a0f;
-  color: var(--green);
-  font-size: 13px;
-  font-family: 'Noto Sans JP', sans-serif;
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-top: 12px;
-}
-.show-output-btn:hover { background: #172514; border-color: var(--green); }
-
-/* ── 結果図解 ── */
-.result-box {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 28px 24px;
-}
-.result-states {
-  display: grid;
-  grid-template-columns: 1fr 60px 1fr;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-.state-card {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px 16px;
-}
-.state-card.after { border-color: #2a5c1c; background: #0e1c0d; }
-.state-label {
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 0.06em;
-  margin-bottom: 8px;
-}
-.state-item {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  color: var(--muted);
-  padding: 3px 0;
-}
-.state-item.found { color: var(--green); }
-.arrow-center { text-align: center; font-size: 20px; color: var(--accent); }
-
-.result-note {
-  font-size: 13px;
-  color: var(--muted);
-  background: var(--bg3);
-  border-radius: 6px;
-  padding: 12px 16px;
-  line-height: 1.7;
-}
-.result-note strong { color: var(--text); }
-
-/* ── 次のステップ ── */
-.next-step {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px 20px;
-  margin-top: 48px;
-  font-size: 13px;
-}
-.next-label { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
-.next-title { color: var(--text); font-weight: 500; }
-.next-btn {
-  padding: 8px 20px;
-  border-radius: 6px;
-  border: 1px solid var(--accent);
-  background: #1c2d3d;
-  color: var(--accent);
-  font-size: 13px;
-  font-family: 'Noto Sans JP', sans-serif;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.next-btn:hover { background: #1e3550; }
-
-/* ── 目的ブロック ── */
-.purpose-box {
-  display: flex;
-  gap: 16px;
-  background: #161c2a;
-  border: 1px solid #2a3d6e;
-  border-left: 3px solid var(--accent);
-  border-radius: 0 10px 10px 0;
-  padding: 20px 22px;
-  margin-bottom: 48px;
-}
-.purpose-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
-.purpose-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--accent);
-  letter-spacing: 0.04em;
-  margin-bottom: 8px;
-}
-.purpose-body {
-  font-size: 14px;
-  color: var(--text);
-  line-height: 1.8;
-}
-.purpose-body strong { color: #e6edf3; font-weight: 500; }
-</style>
+<title>Chapter 1-3 — ストレージサーバを見つける</title>
+<link rel="stylesheet" href="style.css">
 </head>
-<body data-page="lesson_iscsi_discovery.html">
-<div class="page sb-main-wrap">
+<body class="layout-lesson"
+      data-page="lesson_iscsi_discovery.html"
+      data-lesson="Chapter 1-3 iSCSI Discovery — iscsiadmコマンドでストレージサーバを発見する">
 
-  <!-- パンくずナビ -->
-  <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#768390;margin-bottom:36px;">
-    <a href="index.html" style="color:#58a6ff;text-decoration:none;">← コース一覧</a>
-    <span>›</span>
-    <a href="intro.html" style="color:#58a6ff;text-decoration:none;">操作入門</a>
-    <span>›</span>
-    <span>Chapter 1-3</span>
-  </div>
+<div class="sb-main-wrap">
 
-  <!-- ヘッダー -->
-  <div class="lesson-meta">
-    <span class="tag storage">Part 1 — iSCSI</span>
-    <span class="tag">Chapter 1-3</span>
-    <span class="chapter-num">lesson_03</span>
-  </div>
-  <h1>ストレージサーバを見つける</h1>
-  <p class="subtitle">コマンド1本で「ネットワーク上のディスク提供サーバ」を探し出す手順を学びます</p>
-
-  <!-- 目的ブロック -->
-  <div class="purpose-box">
-    <div class="purpose-icon">🎯</div>
-    <div>
-      <div class="purpose-title">このレッスンでできるようになること</div>
-      <div class="purpose-body">
-        あなたの VM（クライアント）から、ネットワーク上にある<strong>ストレージサーバ（ディスクを提供する VM）</strong>に「そこにいますか？」と問い合わせ、接続先の情報を取得できるようになります。<br>
-        この操作は、iSCSI でディスクを使う<strong>最初の必須ステップ</strong>です。これが通らないと、次のログイン・マウントに進めません。
-      </div>
+  <!-- タブバー -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('content')" id="tab-content">
+      <span class="ti">📖</span> 説明
+    </button>
+    <div class="tab-divider"></div>
+    <button class="tab-btn" onclick="switchTab('terminal')" id="tab-terminal">
+      <span class="ti">💻</span> ターミナル
+    </button>
+    <div class="tab-spacer"></div>
+    <div class="tab-meta">
+      <span class="tab-chapter">lesson_03</span>
+      <span class="tab-badge">Part 1 — iSCSI</span>
+      <span class="tab-badge real">実機</span>
     </div>
+    <button class="ai-overlay-btn" id="ai-overlay-btn" onclick="toggleAI()">
+      🤖 AIに聞く
+    </button>
   </div>
 
-  <!-- STEP 1: 図解アニメーション -->
-  <div class="section">
-    <div class="section-label"><span class="step-dot">1</span>コマンドを打つと何が起きるか</div>
+  <!-- 説明パネル -->
+  <div class="panel active" id="panel-content">
+    <div class="content-scroll">
 
-    <div class="diagram-box">
-      <svg id="diagram-svg" viewBox="0 0 780 220" xmlns="http://www.w3.org/2000/svg">
-
-        <!-- 受講者 VM -->
-        <g class="node-vm">
-          <rect x="30" y="70" width="180" height="80" rx="10"/>
-          <text x="120" y="102" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" fill="#8ecbff">受講者 VM</text>
-          <text x="120" y="120" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="11" fill="#58a6ff">あなたのVM（クライアント）</text>
-          <text x="120" y="138" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#768390">192.168.1.100</text>
-        </g>
-
-        <!-- ネットワーク雲 -->
-        <g>
-          <rect x="280" y="80" width="160" height="60" rx="30" fill="#1a2030" stroke="#2a3441" stroke-width="1" stroke-dasharray="4 3"/>
-          <text x="360" y="107" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="11" fill="#768390">TCP/IP</text>
-          <text x="360" y="124" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#3b4a5a">port 3260</text>
-        </g>
-
-        <!-- iSCSI Target VM -->
-        <g class="node-target">
-          <rect x="570" y="70" width="180" height="80" rx="10"/>
-          <text x="660" y="102" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="13" fill="#6fd672">ストレージサーバ VM</text>
-          <text x="660" y="120" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="11" fill="#3fb950">ディスクを提供する側</text>
-          <text x="660" y="138" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#768390">192.168.1.201</text>
-        </g>
-
-        <!-- Discovery プローブ（左→右） -->
-        <path id="probe" class="probe-line" d="M212 108 L278 108"/>
-        <path id="probe2" class="probe-line" d="M440 108 L568 108"/>
-
-        <!-- Response（右→左） -->
-        <path id="resp" class="response-line" d="M568 118 L440 118"/>
-        <path id="resp2" class="response-line" d="M278 118 L212 118"/>
-
-        <!-- 送信パルス -->
-        <circle id="pulse" class="pulse-circle" cx="120" cy="110" r="8"/>
-
-        <!-- 問い合わせラベル -->
-        <text id="label-send" x="360" y="72" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="11" fill="#58a6ff" opacity="0">「ストレージサーバはいますか？」</text>
-
-        <!-- 応答ラベル -->
-        <text id="label-resp" x="360" y="152" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="11" fill="#3fb950" opacity="0">「います。接続名はこれです」</text>
-
-        <!-- 発見バッジ -->
-        <g id="badge-found" class="discovered-badge">
-          <rect x="440" y="168" width="200" height="36" rx="6" fill="#0e1c0d" stroke="#2a5c1c" stroke-width="1"/>
-          <text x="540" y="182" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#3fb950">iqn.2024-01.local:storage</text>
-          <text x="540" y="196" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#6fd672">接続名（IQN）を取得 ✓</text>
-        </g>
-
-      </svg>
-
-      <div class="diagram-controls">
-        <button class="ctrl-btn primary" id="btn-play" onclick="playDiagram()">▶ アニメーション再生</button>
-        <button class="ctrl-btn" onclick="resetDiagram()">↺ リセット</button>
-        <div class="phase-indicator">
-          <span class="phase-dot" id="dot0"></span>
-          <span class="phase-dot" id="dot1"></span>
-          <span class="phase-dot" id="dot2"></span>
-          フェーズ <span id="phase-num">-</span>/3
-        </div>
+      <div class="breadcrumb">
+        <a href="index.html">コース概要</a> ›
+        <a href="intro.html">操作入門</a> ›
+        Chapter 1-3
       </div>
-    </div>
-  </div>
 
-  <!-- STEP 2: コマンド説明 -->
-  <div class="section">
-    <div class="section-label"><span class="step-dot">2</span>コマンドの構造</div>
-
-    <div class="explanation">
-      このコマンドは、あなたの VM から指定した IP アドレスのサーバに向かって「ディスクを提供できますか？」と問い合わせます。サーバが応答すると、<strong>接続に必要な名前（IQN）</strong>が返ってきます。IQN とは「このストレージサーバの固有ID」のようなものです。次のステップでこの ID を使って実際に接続します。
-    </div>
-
-    <div class="cmd-block">
-      <div class="cmd-header">
-        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-        <span>receiver-vm — bash</span>
+      <div class="lesson-tags">
+        <span class="ltag">Part 1 — iSCSI</span>
+        <span class="ltag blue">Chapter 1-3</span>
       </div>
-      <div class="cmd-body">
+      <h1>ストレージサーバを見つける</h1>
+      <p class="subtitle">コマンド1本で「ネットワーク上のディスク提供サーバ」を探し出す手順を学びます</p>
+
+      <div class="purpose-box">
+        <span class="purpose-icon">🎯</span>
         <div>
-          <span class="cmd-prompt">$ </span>
-          <span class="cmd-text">sudo iscsiadm -m discovery -t sendtargets -p 192.168.1.201</span>
+          <div class="purpose-title">このレッスンでできるようになること</div>
+          <div class="purpose-body">
+            あなたのVMから、ネットワーク上にある<strong>ストレージサーバに「そこにいますか？」と問い合わせ</strong>、接続先の情報を取得できるようになります。
+            これがiSCSIでディスクを使う<strong>最初の必須ステップ</strong>です。これが通らないと、次のログイン・マウントに進めません。
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="param-wrap">
-      <table class="param-table">
-        <thead>
-          <tr><th>パラメータ</th><th>意味</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>-m discovery</td>
-            <td>「サーバを探す」モードで動かす指定。他のモードには「接続する（node）」「状態確認（session）」などがある</td>
-          </tr>
-          <tr>
-            <td>-t sendtargets</td>
-            <td>問い合わせ方式の指定。「ディスクを提供できるサーバを教えて」と一括で聞く標準的な方式</td>
-          </tr>
-          <tr>
-            <td>-p 192.168.1.201</td>
-            <td>問い合わせ先のIPアドレス。ここにストレージサーバVMのIPを指定する。ポート番号（3260）は省略可能</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <!-- ステップ1（最初から開いている） -->
+      <div class="step-section open">
+        <div class="step-header" onclick="toggleStep(this)">
+          <span class="step-num">1</span>
+          <span class="step-title">コマンドを打つと何が起きるか</span>
+          <span class="step-chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <div class="expl">
+            このコマンドは、あなたのVMから指定したIPアドレスのサーバに向かって「ディスクを提供できますか？」と問い合わせます。
+            サーバが応答すると、<strong>接続に必要な名前（IQN）</strong>が返ってきます。
+            IQNとは「このストレージサーバの固有ID」のようなものです。
+            次のステップでこのIDを使って実際に接続します。
+          </div>
+          <svg width="100%" viewBox="0 0 680 180" xmlns="http://www.w3.org/2000/svg" style="display:block;margin-bottom:14px">
+            <defs>
+              <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M2 1L8 5L2 9" fill="none" stroke="#58a6ff" stroke-width="1.5" stroke-linecap="round"/>
+              </marker>
+              <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M2 1L8 5L2 9" fill="none" stroke="#3fb950" stroke-width="1.5" stroke-linecap="round"/>
+              </marker>
+            </defs>
+            <rect x="20" y="50" width="180" height="70" rx="10" fill="#1c2230" stroke="#3a4a6a" stroke-width="1.5"/>
+            <text x="110" y="78" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="13" fill="#e2eaf3">あなたのVM</text>
+            <text x="110" y="96" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="11" fill="#9aacbc">iSCSI Initiator</text>
+            <text x="110" y="112" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#768390">192.168.1.100</text>
+            <rect x="260" y="60" width="160" height="50" rx="28" fill="#1c2030" stroke="#2a3441" stroke-width="1" stroke-dasharray="4 3"/>
+            <text x="340" y="82" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="11" fill="#9aacbc">TCP/IP ネットワーク</text>
+            <text x="340" y="99" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#3b4a5a">port 3260</text>
+            <rect x="480" y="50" width="180" height="70" rx="10" fill="#1c2616" stroke="#2a5c1c" stroke-width="1.5"/>
+            <text x="570" y="78" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="13" fill="#6fd672">ストレージサーバ</text>
+            <text x="570" y="96" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="11" fill="#3fb950">iSCSI Target</text>
+            <text x="570" y="112" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#768390">192.168.1.201</text>
+            <line x1="202" y1="78" x2="258" y2="78" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a1)"/>
+            <text x="230" y="68" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#58a6ff">「いますか？」</text>
+            <line x1="420" y1="96" x2="478" y2="96" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a2)"/>
+            <text x="449" y="115" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" fill="#3fb950">「います。IQNはこれです」</text>
+          </svg>
+        </div>
+      </div>
 
-    <div class="explanation highlight">
-      成功すると<strong>接続名（IQN）</strong>（例：<code>iqn.2024-01.local:storage</code>）と接続先 IP が返ってきます。この接続名を使って次のステップ「ログイン（実際に繋ぐ）」に進みます。
+      <!-- ステップ2 -->
+      <div class="step-section">
+        <div class="step-header" onclick="toggleStep(this)">
+          <span class="step-num">2</span>
+          <span class="step-title">コマンドの構造を理解する</span>
+          <span class="step-chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <div class="cmd-block">
+            <div class="cmd-header">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span>receiver-vm — bash</span>
+            </div>
+            <div class="cmd-body">
+              <span class="cmd-prompt">$ </span>
+              <span class="cmd-text">sudo iscsiadm -m discovery -t sendtargets -p 192.168.1.201</span>
+            </div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px">
+            <div style="display:grid;grid-template-columns:200px 1fr;background:var(--bg3);border-bottom:1px solid var(--border);font-size:12px;color:var(--muted);letter-spacing:0.06em">
+              <div style="padding:8px 14px">パラメータ</div>
+              <div style="padding:8px 14px">意味</div>
+            </div>
+            <div style="display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border)">
+              <div style="padding:11px 14px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--purple)">-m discovery</div>
+              <div style="padding:11px 14px;font-size:14px;color:var(--muted);line-height:1.7">「サーバを探す」モードで動かす指定。他のモードには「接続する（node）」「状態確認（session）」などがある</div>
+            </div>
+            <div style="display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border)">
+              <div style="padding:11px 14px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--purple)">-t sendtargets</div>
+              <div style="padding:11px 14px;font-size:14px;color:var(--muted);line-height:1.7">問い合わせ方式の指定。「ディスクを提供できるサーバを教えて」と一括で聞く標準的な方式</div>
+            </div>
+            <div style="display:grid;grid-template-columns:200px 1fr">
+              <div style="padding:11px 14px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--purple)">-p 192.168.1.201</div>
+              <div style="padding:11px 14px;font-size:14px;color:var(--muted);line-height:1.7">問い合わせ先のIPアドレス。ここにストレージサーバVMのIPを指定する</div>
+            </div>
+          </div>
+          <div class="expl green">
+            成功すると<strong>接続名（IQN）</strong>（例：<code>iqn.2024-01.local:storage</code>）と接続先IPが返ってきます。この接続名を使って次のステップ「ログイン（実際に繋ぐ）」に進みます。
+          </div>
+        </div>
+      </div>
+
+      <!-- ステップ3 -->
+      <div class="step-section">
+        <div class="step-header" onclick="toggleStep(this)">
+          <span class="step-num">3</span>
+          <span class="step-title">実際に打ってみる</span>
+          <span class="step-chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <div class="expl">
+            「ターミナル」タブに切り替えて、演習VMにログインしてからコマンドを実行してください。<br>
+            ターミナルの黒い画面を<strong>クリックしてからキーボード入力</strong>してください。
+          </div>
+          <div class="cmd-block">
+            <div class="cmd-header">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span>receiver-vm — bash</span>
+            </div>
+            <div class="cmd-body">
+              <div><span class="cmd-prompt">$ </span><span class="cmd-text">sudo iscsiadm -m discovery -t sendtargets -p 192.168.1.201</span></div>
+              <div class="cmd-output" id="cmd-out" style="display:none">
+                <span style="color:#58a6ff">192.168.1.201</span><span style="color:#2a3441">:</span><span style="color:#d29922">3260</span><span style="color:#9aacbc">,1 </span><span class="hl">iqn.2024-01.local:storage-target</span>
+              </div>
+            </div>
+          </div>
+          <button class="show-btn" id="show-out-btn" onclick="showCmdOut()">▼ 実行結果を確認する</button>
+          <button class="goto-terminal" onclick="switchTab('terminal')" style="margin-top:14px">
+            💻 ターミナルタブを開いて実行する →
+          </button>
+        </div>
+      </div>
+
+      <!-- ステップ4 -->
+      <div class="step-section">
+        <div class="step-header" onclick="toggleStep(this)">
+          <span class="step-num">4</span>
+          <span class="step-title">Discovery 後の状態変化</span>
+          <span class="step-chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <div style="display:grid;grid-template-columns:1fr 60px 1fr;align-items:center;gap:8px;margin-bottom:16px">
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px">
+              <div style="font-size:11px;color:var(--muted);letter-spacing:0.06em;margin-bottom:8px">BEFORE — Discovery 前</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);line-height:2">Target: 不明<br>IQN: なし<br>接続: 不可</div>
+            </div>
+            <div style="text-align:center;font-size:20px;color:var(--accent)">→</div>
+            <div style="background:#0e1c0d;border:1px solid #2a5c1c;border-radius:8px;padding:14px 16px">
+              <div style="font-size:11px;color:var(--muted);letter-spacing:0.06em;margin-bottom:8px">AFTER — Discovery 後</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2">
+                <span class="hl">Target: 192.168.1.201:3260</span><br>
+                <span class="hl">IQN: iqn.2024-01.local:storage</span><br>
+                <span class="hl">/etc/iscsi/nodes/ に記録済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="expl">
+            Discovery の情報は <strong>/etc/iscsi/nodes/</strong> フォルダに自動保存されます。次のステップでこの接続名を使って <code>iscsiadm -m node --login</code> を実行すると、ストレージサーバのディスクが <strong>/dev/sdb</strong> としてあなたのVMから使える状態になります。
+          </div>
+        </div>
+      </div>
+
+      <!-- 次へ -->
+      <div class="next-lesson">
+        <div>
+          <div class="next-label">NEXT LESSON</div>
+          <div class="next-title">Chapter 1-4 — ログインして /dev/sdb として認識させる</div>
+        </div>
+        <button class="next-btn">次へ →</button>
+      </div>
+
     </div>
   </div>
 
-  <!-- STEP 3: SSH 操作 -->
-  <div class="section">
-    <div class="section-label"><span class="step-dot">3</span>実際に打ってみる</div>
-
-    <div class="hands-on-box">
-      <p class="hands-on-title">Guacamole からあなたの VM に接続して、下のコマンドを実行してください</p>
-      <p class="hands-on-sub">ストレージサーバ（192.168.1.201）に「ディスクを提供できますか？」と問い合わせます</p>
-
-      <div class="cmd-block">
-        <div class="cmd-header">
+  <!-- ターミナルパネル -->
+  <div class="panel" id="panel-terminal">
+    <div class="terminal-wrap">
+      <div class="terminal-topbar">
+        <div class="terminal-topbar-left">
           <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span>receiver-vm — bash</span>
+          <span class="terminal-label">SSH Terminal — 演習VM（Guacamole）</span>
         </div>
-        <div class="cmd-body">
-          <div>
-            <span class="cmd-prompt">$ </span>
-            <span class="cmd-text">sudo iscsiadm -m discovery -t sendtargets -p 192.168.1.201</span>
-            <span class="cmd-cursor"></span>
-          </div>
-          <div class="cmd-output" id="output-block">
-            <span class="out-ip">192.168.1.201</span><span style="color:#2a3441">:</span><span class="out-port">3260</span><span style="color:#768390">,1 </span><span class="out-iqn">iqn.2024-01.local:storage-target</span>
-          </div>
-        </div>
+        <span class="terminal-hint">
+          操作前に画面をクリック &nbsp;|&nbsp;
+          キャンセル <kbd>Ctrl</kbd>+<kbd>C</kbd> &nbsp;|&nbsp;
+          <button onclick="switchTab('content')"
+            style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:11px;font-family:inherit">
+            ← 説明タブ
+          </button>
+        </span>
       </div>
-
-      <button class="show-output-btn" id="btn-output" onclick="showOutput()">▼ 実行結果を確認する</button>
+      <iframe class="terminal-iframe"
+        src="https://infra-study.org/guacamole/"
+        allow="fullscreen">
+      </iframe>
     </div>
-  </div>
-
-  <!-- STEP 4: 結果の図解 -->
-  <div class="section">
-    <div class="section-label"><span class="step-dot">4</span>Discovery 後の状態変化</div>
-
-    <div class="result-box">
-      <div class="result-states">
-        <div class="state-card">
-          <div class="state-label">BEFORE — Discovery 前</div>
-          <div class="state-item">Target: 不明</div>
-          <div class="state-item">IQN: なし</div>
-          <div class="state-item">接続: 不可</div>
-        </div>
-        <div class="arrow-center">→</div>
-        <div class="state-card after">
-          <div class="state-label">AFTER — Discovery 後</div>
-          <div class="state-item found">Target: 192.168.1.201:3260</div>
-          <div class="state-item found">IQN: iqn.2024-01.local:storage-target</div>
-          <div class="state-item found">/etc/iscsi/nodes/ に記録済み</div>
-        </div>
-      </div>
-
-      <div class="result-note">
-        取得した接続名（IQN）は <strong>/etc/iscsi/nodes/</strong> フォルダに自動保存されます。次のステップでこの接続名を使って <code>iscsiadm -m node --login</code> を実行すると、ストレージサーバのディスクが<strong>/dev/sdb</strong> としてあなたの VM から使える状態になります。
-      </div>
-    </div>
-  </div>
-
-  <!-- 次のステップ -->
-  <div class="next-step">
-    <div>
-      <div class="next-label">NEXT LESSON</div>
-      <div class="next-title">Chapter 1-4 — ログインして /dev/sdb として認識させる</div>
-    </div>
-    <a href="index.html" class="next-btn" style="text-decoration:none">コース一覧へ →</a>
   </div>
 
 </div>
 
+<!-- AIオーバーレイ -->
+<div class="ai-overlay-backdrop" id="ai-overlay-backdrop" onclick="closeAI()"></div>
+<div class="ai-overlay-panel" id="ai-overlay-panel">
+  <div class="ai-panel-header">
+    <div class="ai-panel-title">🤖 AI サポート</div>
+    <button class="ai-panel-close" onclick="closeAI()">✕</button>
+  </div>
+  <div class="ai-panel-lesson">現在のレッスン：Chapter 1-3 iSCSI Discovery</div>
+  <div class="ai-messages" id="ai-messages">
+    <div class="ai-msg ai">こんにちは！このレッスンで詰まったことがあれば何でも聞いてください。答えは直接教えませんが、ヒントを出します 😊</div>
+  </div>
+  <div class="ai-input-area">
+    <div class="ai-input-hint">Enter で送信 / Shift+Enter で改行</div>
+    <div class="ai-input-row">
+      <textarea class="ai-input" id="ai-input" rows="1"
+        placeholder="例：コマンドが見つからないと言われます"></textarea>
+      <button class="ai-send" id="ai-send" onclick="sendAI()">送信</button>
+    </div>
+  </div>
+</div>
+
 <script>
-let phase = 0;
-let animTimer = null;
-
-function setPhase(n) {
-  phase = n;
-  document.getElementById('phase-num').textContent = n;
-  for (let i = 0; i < 3; i++) {
-    document.getElementById('dot' + i).classList.toggle('active', i < n);
-  }
-}
-
-function resetDiagram() {
-  clearTimeout(animTimer);
-  setPhase(0);
-  ['probe','probe2'].forEach(id => document.getElementById(id).classList.remove('active'));
-  ['resp','resp2'].forEach(id => document.getElementById(id).classList.remove('active'));
-  document.getElementById('pulse').classList.remove('active');
-  document.getElementById('label-send').style.opacity = '0';
-  document.getElementById('label-resp').style.opacity = '0';
-  document.getElementById('badge-found').classList.remove('active');
-  document.getElementById('btn-play').textContent = '▶ アニメーション再生';
-}
-
-function playDiagram() {
-  resetDiagram();
-  document.getElementById('btn-play').textContent = '再生中...';
-
-  // Phase 1: プローブ送信
-  animTimer = setTimeout(() => {
-    setPhase(1);
-    document.getElementById('pulse').classList.add('active');
-    document.getElementById('probe').classList.add('active');
-    document.getElementById('probe2').classList.add('active');
-    document.getElementById('label-send').style.opacity = '1';
-  }, 300);
-
-  // Phase 2: レスポンス受信
-  animTimer = setTimeout(() => {
-    setPhase(2);
-    document.getElementById('resp').classList.add('active');
-    document.getElementById('resp2').classList.add('active');
-    document.getElementById('label-resp').style.opacity = '1';
-  }, 2000);
-
-  // Phase 3: 発見完了
-  animTimer = setTimeout(() => {
-    setPhase(3);
-    document.getElementById('badge-found').classList.add('active');
-    document.getElementById('btn-play').textContent = '▶ 再生';
-  }, 3400);
-}
-
-function showOutput() {
-  document.getElementById('output-block').classList.add('visible');
-  document.getElementById('btn-output').style.display = 'none';
+function showCmdOut() {
+  document.getElementById('cmd-out').style.display = 'block';
+  document.getElementById('show-out-btn').style.display = 'none';
 }
 </script>
+<script src="common.js"></script>
 <script src="sidebar.js"></script>
 </body>
 </html>

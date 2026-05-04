@@ -4,139 +4,78 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>操作入門 — ログインと基礎コマンド</title>
+<link rel="stylesheet" href="style.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
-
-:root {
-  --bg: #0d1117; --bg2: #161b22; --bg3: #1c2230;
-  --border: #2a3441; --text: #cdd9e5; --muted: #768390;
-  --accent: #58a6ff; --green: #3fb950; --amber: #d29922;
-  --purple: #bc8cff;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-weight: 300; line-height: 1.7; }
-.page { max-width: 860px; margin: 0 auto; padding: 48px 24px 100px; margin-left: 0; }
-
-/* nav */
-.nav { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 40px; }
-.nav a { color: var(--accent); text-decoration: none; }
-.nav a:hover { text-decoration: underline; }
-
-/* header */
-.lesson-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-.tag { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; padding: 3px 10px; border-radius: 99px; }
-.tag-prep { background: #1c2230; color: var(--muted); border: 1px solid var(--border); }
-.tag-num  { background: #1c2d3d; color: var(--accent); border: 1px solid #2a4060; }
-h1 { font-size: 26px; font-weight: 500; color: #e6edf3; margin-bottom: 6px; line-height: 1.3; }
-.subtitle { font-size: 14px; color: var(--muted); margin-bottom: 40px; }
-
-/* purpose */
-.purpose-box {
-  display: flex; gap: 16px;
-  background: #161c2a; border: 1px solid #2a3d6e; border-left: 3px solid var(--accent);
-  border-radius: 0 10px 10px 0; padding: 20px 22px; margin-bottom: 48px;
-}
-.purpose-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
-.purpose-title { font-size: 13px; font-weight: 500; color: var(--accent); margin-bottom: 6px; }
-.purpose-body { font-size: 14px; color: var(--text); line-height: 1.8; }
-.purpose-body strong { color: #e6edf3; font-weight: 500; }
-
-/* section */
+/* intro.html 専用スタイル */
+body.layout-page .sb-main-wrap { min-height: 100vh; }
+.content { max-width: 760px; padding: 52px 40px 100px; }
 .section { margin-bottom: 52px; }
-.section-label {
+.section-eyebrow {
+  font-size: 10px; letter-spacing: 0.14em; color: var(--accent);
+  text-transform: uppercase; margin-bottom: 8px;
   display: flex; align-items: center; gap: 10px;
-  font-size: 11px; font-weight: 500; letter-spacing: 0.12em; color: var(--muted);
-  text-transform: uppercase; margin-bottom: 18px;
 }
-.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-.step-dot {
-  width: 22px; height: 22px; border-radius: 50%; background: var(--bg3);
-  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 500; color: var(--accent); flex-shrink: 0;
-}
+.section-eyebrow::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+h2 { font-size: 22px; font-weight: 500; color: #e6edf3; margin-bottom: 12px; }
+h2 span { color: var(--accent); }
+.lead { font-size: 15px; color: var(--muted); line-height: 1.95; margin-bottom: 20px; }
+.lead strong { color: var(--text); font-weight: 500; }
 
-/* ステップカード（ログイン手順） */
+/* ヒーロー */
+.page-hero { margin-bottom: 48px; }
+.breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.page-tags { display: flex; gap: 8px; margin-bottom: 12px; }
+.ptag { font-size: 12px; padding: 3px 10px; border-radius: 99px; background: #1c2230; color: var(--muted); border: 1px solid var(--border); }
+.ptag.blue { background: #1c2d3d; color: var(--accent); border-color: #2a4060; }
+
+/* ステップ（ログイン手順） */
 .steps { display: flex; flex-direction: column; gap: 0; }
-.step-item {
-  display: flex; gap: 0; position: relative;
-}
+.step-item { display: flex; gap: 0; position: relative; }
 .step-item:not(:last-child)::after {
   content: ''; position: absolute; left: 19px; top: 44px;
   width: 2px; height: calc(100% - 8px); background: var(--border);
 }
 .step-circle {
-  width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--accent);
-  background: var(--bg3); display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 500; color: var(--accent); flex-shrink: 0;
-  position: relative; z-index: 1; margin-top: 2px;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1.5px solid var(--accent); background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 500; color: var(--accent);
+  flex-shrink: 0; position: relative; z-index: 1; margin-top: 2px;
 }
-.step-content { flex: 1; padding: 0 0 32px 18px; }
-.step-title { font-size: 15px; font-weight: 500; color: #e6edf3; margin-bottom: 6px; }
-.step-desc { font-size: 13px; color: var(--muted); line-height: 1.8; margin-bottom: 12px; }
+.step-content { flex: 1; padding: 0 0 32px 20px; }
+.step-title { font-size: 16px; font-weight: 500; color: #e6edf3; margin-bottom: 6px; }
+.step-desc { font-size: 14px; color: var(--muted); line-height: 1.85; margin-bottom: 12px; }
+.step-desc strong { color: var(--text); font-weight: 500; }
 
-/* 画像プレースホルダ */
+/* スクリーンショットプレースホルダー */
 .img-placeholder {
   background: var(--bg3); border: 1px dashed var(--border); border-radius: 8px;
-  height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 8px; color: var(--muted); font-size: 12px; margin-bottom: 0;
+  height: 140px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px;
+  color: var(--muted); font-size: 12px; margin-bottom: 0;
 }
 .img-placeholder .ph-icon { font-size: 28px; opacity: 0.4; }
-.img-placeholder .ph-label { opacity: 0.6; }
 
-/* コマンドブロック */
-.cmd-block {
-  background: #090d13; border: 1px solid var(--border); border-radius: 10px;
-  overflow: hidden; margin-bottom: 14px;
-}
-.cmd-header {
-  display: flex; align-items: center; gap: 8px; padding: 9px 16px;
-  background: var(--bg3); border-bottom: 1px solid var(--border);
-  font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace;
-}
-.dot { width: 10px; height: 10px; border-radius: 50%; }
-.dot.r { background: #f85149; } .dot.y { background: #d29922; } .dot.g { background: #3fb950; }
-.cmd-body { padding: 18px 20px; }
-.cmd-prompt { color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 13px; user-select: none; }
-.cmd-text { color: #e6edf3; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; }
-.cmd-output {
-  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
-  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); line-height: 2;
-  opacity: 0; transition: opacity 0.4s;
-}
-.cmd-output.visible { opacity: 1; }
-
-/* 説明ボックス */
-.expl {
-  background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--accent);
-  border-radius: 0 8px 8px 0; padding: 14px 18px; font-size: 13px; line-height: 1.8;
-  color: var(--text); margin-bottom: 12px;
-}
-.expl.green { border-left-color: var(--green); }
-.expl.amber { border-left-color: var(--amber); }
-.expl code {
-  font-family: 'JetBrains Mono', monospace; font-size: 12px;
-  background: #0d1117; border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; color: var(--purple);
-}
-.expl strong { color: #e6edf3; font-weight: 500; }
-
-/* コマンド一覧テーブル */
+/* コマンドテーブル */
 .cmd-table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
-.cmd-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cmd-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .cmd-table th {
-  text-align: left; padding: 9px 16px; background: var(--bg3);
-  color: var(--muted); font-weight: 400; font-size: 11px; letter-spacing: 0.06em;
+  text-align: left; padding: 10px 16px; background: var(--bg3);
+  color: var(--muted); font-weight: 400; font-size: 12px; letter-spacing: 0.06em;
   border-bottom: 1px solid var(--border);
 }
-.cmd-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.cmd-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
 .cmd-table tr:last-child td { border-bottom: none; }
-.cmd-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--purple); white-space: nowrap; width: 180px; }
+.cmd-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--purple); white-space: nowrap; width: 120px; }
 .cmd-table td:nth-child(2) { color: var(--muted); }
-.cmd-table td:last-child { color: var(--text); font-size: 12px; }
+.cmd-table td:last-child { color: var(--text); font-size: 13px; }
 
-/* 実習ボックス */
+/* ハンズオン */
 .hands-on-box {
-  background: var(--bg2); border: 1px solid #2a5c1c; border-radius: 12px;
-  padding: 22px; position: relative; margin-bottom: 12px;
+  background: var(--bg2); border: 1px solid #2a5c1c;
+  border-radius: 12px; padding: 24px; position: relative; margin-bottom: 12px;
 }
 .hands-on-box::before {
   content: '⌨  手を動かしてみよう';
@@ -145,10 +84,10 @@ h1 { font-size: 26px; font-weight: 500; color: #e6edf3; margin-bottom: 6px; line
   padding: 0 12px; font-size: 11px; color: var(--green);
   border-radius: 0 0 6px 6px; letter-spacing: 0.04em;
 }
-.hands-on-title { font-size: 14px; font-weight: 500; color: #6fd672; margin-bottom: 4px; }
+.hands-on-title { font-size: 15px; font-weight: 500; color: #6fd672; margin-bottom: 4px; }
 .hands-on-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
 .show-btn {
-  display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px;
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
   border-radius: 6px; border: 1px solid #2a5c1c; background: #111a0f;
   color: var(--green); font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
   cursor: pointer; transition: all 0.15s; margin-top: 10px;
@@ -158,17 +97,16 @@ h1 { font-size: 26px; font-weight: 500; color: #e6edf3; margin-bottom: 6px; line
 /* 注意ボックス */
 .warn-box {
   display: flex; gap: 12px; background: #1c1a0d; border: 1px solid #3a3010;
-  border-radius: 8px; padding: 14px 16px; font-size: 13px; color: var(--amber);
-  line-height: 1.7; margin-bottom: 14px;
+  border-radius: 8px; padding: 14px 16px; font-size: 14px; color: var(--amber);
+  line-height: 1.75; margin-bottom: 14px;
 }
-.warn-box .wi { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
 
 /* ナビゲーション */
 .page-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 60px; gap: 12px; }
 .nav-btn {
   display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px;
   border-radius: 8px; border: 1px solid var(--border); background: var(--bg2);
-  color: var(--text); font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
+  color: var(--text); font-size: 14px; font-family: 'Noto Sans JP', sans-serif;
   cursor: pointer; text-decoration: none; transition: all 0.15s;
 }
 .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -177,215 +115,168 @@ h1 { font-size: 26px; font-weight: 500; color: #e6edf3; margin-bottom: 6px; line
 .nav-center { font-size: 12px; color: var(--muted); text-align: center; }
 </style>
 </head>
-<body data-page="intro.html">
-<div class="page sb-main-wrap">
+<body class="layout-page" data-page="intro.html">
+<div class="sb-main-wrap">
+<div class="content">
 
-  <div class="nav">
-    <a href="index.html">← コース一覧</a>
-    <span>›</span>
-    <span>Part 0 — 操作入門</span>
+  <!-- ヒーロー -->
+  <div class="page-hero">
+    <div class="breadcrumb">
+      <a href="index.html">← コース概要</a>
+      <span>›</span>
+      <span>Part 0 — 操作入門</span>
+    </div>
+    <div class="page-tags">
+      <span class="ptag">Part 0 — 準備</span>
+      <span class="ptag blue">Chapter 0-2 / 0-3</span>
+    </div>
+    <h1 style="font-size:26px;font-weight:500;color:#e6edf3;margin-bottom:6px;line-height:1.3">
+      サーバへのログインと<br>基礎コマンド
+    </h1>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:0">コマンドラインを初めて使う方向けに、ログインの手順と最低限必要なコマンドを説明します</p>
   </div>
-
-  <div class="lesson-meta">
-    <span class="tag tag-prep">Part 0 — 準備</span>
-    <span class="tag tag-num">Chapter 0-2 / 0-3</span>
-  </div>
-  <h1>サーバへのログインと<br>基礎コマンド</h1>
-  <p class="subtitle">コマンドラインを初めて使う方向けに、ログインの手順と最低限必要なコマンドを説明します</p>
 
   <div class="purpose-box">
     <span class="purpose-icon">🎯</span>
     <div>
       <div class="purpose-title">このページを終えるとできること</div>
       <div class="purpose-body">
-        ブラウザから演習用サーバにログインして、<strong>ファイルの確認・移動・内容表示</strong>ができるようになります。
-        これ以降のレッスンはすべてこの操作が前提になります。
+        ブラウザから演習用サーバにログインして、<strong>ファイルの確認・移動・内容表示</strong>ができるようになります。これ以降のレッスンはすべてこの操作が前提になります。
       </div>
     </div>
   </div>
 
-  <!-- ── STEP 1: ログイン方法 ── -->
+  <!-- STEP 1: ログイン方法 -->
   <div class="section">
-    <div class="section-label"><span class="step-dot">1</span>ブラウザからサーバにログインする</div>
-
-    <div class="expl">
-      このコースでは、<strong>ブラウザだけでサーバを操作</strong>できます。専用ソフトのインストールは不要です。
-      「Guacamole（グアカモレ）」という仕組みを使って、ブラウザの画面がそのままサーバの操作画面になります。
-    </div>
+    <p class="section-eyebrow">① ブラウザからサーバにログインする</p>
+    <h2>専用ソフトは<span>不要</span>です</h2>
+    <p class="lead">このコースでは<strong>ブラウザだけでサーバを操作</strong>できます。「Guacamole（グアカモレ）」という仕組みを使って、ブラウザの画面がそのままサーバの操作画面になります。</p>
 
     <div class="steps">
-
       <div class="step-item">
         <div class="step-circle">1</div>
         <div class="step-content">
           <div class="step-title">コース用 URL をブラウザで開く</div>
-          <div class="step-desc">講師から配布された URL（例：<code style="font-family:monospace;font-size:12px;background:#0d1117;padding:1px 6px;border-radius:4px;border:1px solid #2a3441;color:#bc8cff">https://lab.infra-study.org</code>）をブラウザのアドレスバーに入力します。</div>
-          <div class="img-placeholder">
-            <span class="ph-icon">🖼</span>
-            <span class="ph-label">スクリーンショット：ログイン画面</span>
-          </div>
+          <div class="step-desc">講師から配布された URL（例：<code style="font-family:monospace;font-size:13px;background:#0d1117;padding:1px 6px;border-radius:4px;border:1px solid #2a3441;color:#bc8cff">https://lab.infra-study.org</code>）をブラウザのアドレスバーに入力します。</div>
+          <div class="img-placeholder"><span class="ph-icon">🖼</span><span>スクリーンショット：ログイン画面</span></div>
         </div>
       </div>
-
       <div class="step-item">
         <div class="step-circle">2</div>
         <div class="step-content">
           <div class="step-title">ユーザー名とパスワードを入力する</div>
           <div class="step-desc">配布されたユーザー名・パスワードを入力して「ログイン」をクリックします。</div>
-          <div class="img-placeholder">
-            <span class="ph-icon">🖼</span>
-            <span class="ph-label">スクリーンショット：ユーザー名・パスワード入力</span>
-          </div>
+          <div class="img-placeholder"><span class="ph-icon">🖼</span><span>スクリーンショット：ユーザー名・パスワード入力</span></div>
         </div>
       </div>
-
       <div class="step-item">
         <div class="step-circle">3</div>
         <div class="step-content">
           <div class="step-title">あなたの演習用 VM を選ぶ</div>
           <div class="step-desc">一覧の中から自分に割り当てられた VM（例：student-01）をクリックします。</div>
-          <div class="img-placeholder">
-            <span class="ph-icon">🖼</span>
-            <span class="ph-label">スクリーンショット：VM 選択画面</span>
-          </div>
+          <div class="img-placeholder"><span class="ph-icon">🖼</span><span>スクリーンショット：VM 選択画面</span></div>
         </div>
       </div>
-
       <div class="step-item">
         <div class="step-circle">4</div>
         <div class="step-content">
           <div class="step-title">黒い画面（ターミナル）が表示されたら完了</div>
-          <div class="step-desc">
-            下のような画面が表示されればログイン成功です。<br>
-            ここに<strong>コマンドを入力してサーバを操作</strong>します。
-          </div>
+          <div class="step-desc">下のような画面が表示されればログイン成功です。ここに<strong>コマンドを入力してサーバを操作</strong>します。</div>
           <div class="cmd-block">
             <div class="cmd-header">
               <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
               <span>student-01@lab-vm — bash</span>
             </div>
             <div class="cmd-body">
-              <span class="cmd-prompt">student-01@lab-vm:~$ </span><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#768390">← ここにコマンドを入力します</span>
+              <span class="cmd-prompt">student-01@lab-vm:~$ </span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#9aacbc">← ここにコマンドを入力します</span>
             </div>
           </div>
           <div class="warn-box">
-            <span class="wi">⚠</span>
+            <span style="font-size:16px;flex-shrink:0;margin-top:1px">⚠</span>
             <span>画面が真っ黒のまま動かない場合は、クリックして一度画面をアクティブにしてください。キーボードの入力がサーバに届くようになります。</span>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- ── STEP 2: 基礎コマンド ── -->
+  <!-- STEP 2: 基礎コマンド -->
   <div class="section">
-    <div class="section-label"><span class="step-dot">2</span>最低限覚えるコマンド</div>
-
-    <div class="expl">
-      コマンドとは「サーバへの命令文」です。キーボードで文字を打って <strong>Enter キーを押すと実行</strong>されます。
-      まずはよく使う5つだけ覚えましょう。
-    </div>
-
+    <p class="section-eyebrow">② 最低限覚えるコマンド</p>
+    <h2>まず<span>5つだけ</span>覚えましょう</h2>
+    <p class="lead">コマンドとは「サーバへの命令文」です。キーボードで文字を打って <strong>Enter キーを押すと実行</strong>されます。</p>
     <div class="cmd-table-wrap">
       <table class="cmd-table">
         <thead>
           <tr><th>コマンド</th><th>意味</th><th>使い方の例</th></tr>
         </thead>
         <tbody>
-          <tr>
-            <td>ls</td>
-            <td>今いるフォルダの中身を一覧表示する</td>
-            <td><code style="font-family:monospace;font-size:12px;color:#bc8cff">ls</code> でファイル一覧、<code style="font-family:monospace;font-size:12px;color:#bc8cff">ls -l</code> で詳細表示</td>
-          </tr>
-          <tr>
-            <td>cd</td>
-            <td>フォルダを移動する</td>
-            <td><code style="font-family:monospace;font-size:12px;color:#bc8cff">cd /etc</code> で /etc フォルダへ移動。<code style="font-family:monospace;font-size:12px;color:#bc8cff">cd ~</code> でホームに戻る</td>
-          </tr>
-          <tr>
-            <td>cat</td>
-            <td>ファイルの中身を表示する</td>
-            <td><code style="font-family:monospace;font-size:12px;color:#bc8cff">cat ファイル名</code> でテキストの中身を表示</td>
-          </tr>
-          <tr>
-            <td>pwd</td>
-            <td>今どのフォルダにいるか確認する</td>
-            <td>迷ったときに <code style="font-family:monospace;font-size:12px;color:#bc8cff">pwd</code> を打つと場所がわかる</td>
-          </tr>
-          <tr>
-            <td>sudo</td>
-            <td>管理者権限でコマンドを実行する</td>
-            <td>このコースのコマンドは <code style="font-family:monospace;font-size:12px;color:#bc8cff">sudo</code> を先頭につけることが多い</td>
-          </tr>
+          <tr><td>ls</td><td>今いるフォルダの中身を一覧表示する</td><td><code style="font-family:monospace;font-size:13px;color:#bc8cff">ls</code> でファイル一覧、<code style="font-family:monospace;font-size:13px;color:#bc8cff">ls -l</code> で詳細表示</td></tr>
+          <tr><td>cd</td><td>フォルダを移動する</td><td><code style="font-family:monospace;font-size:13px;color:#bc8cff">cd /etc</code> で /etc へ移動。<code style="font-family:monospace;font-size:13px;color:#bc8cff">cd ~</code> でホームに戻る</td></tr>
+          <tr><td>cat</td><td>ファイルの中身を表示する</td><td><code style="font-family:monospace;font-size:13px;color:#bc8cff">cat ファイル名</code> でテキストの中身を表示</td></tr>
+          <tr><td>pwd</td><td>今どのフォルダにいるか確認する</td><td>迷ったときに <code style="font-family:monospace;font-size:13px;color:#bc8cff">pwd</code> を打つと場所がわかる</td></tr>
+          <tr><td>sudo</td><td>管理者権限でコマンドを実行する</td><td>このコースのコマンドは <code style="font-family:monospace;font-size:13px;color:#bc8cff">sudo</code> を先頭につけることが多い</td></tr>
         </tbody>
       </table>
     </div>
-
     <div class="expl amber">
       <strong>sudo について：</strong>サーバの設定を変えるコマンドには管理者権限が必要です。コマンドの先頭に <code>sudo</code> をつけると管理者として実行できます。求められたらパスワードを入力してください。
     </div>
   </div>
 
-  <!-- ── STEP 3: 実習 ── -->
+  <!-- STEP 3: 実習 -->
   <div class="section">
-    <div class="section-label"><span class="step-dot">3</span>実際に打ってみる</div>
-
+    <p class="section-eyebrow">③ 実際に打ってみる</p>
+    <h2>手を動かして<span>確認</span>しましょう</h2>
     <div class="hands-on-box">
       <p class="hands-on-title">ログインしたら、まずこの3つを順番に実行してください</p>
       <p class="hands-on-sub">エラーが出なければ OK です。出力の内容は気にしなくて大丈夫です</p>
-
       <div class="cmd-block">
         <div class="cmd-header">
           <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
           <span>student-01@lab-vm — bash</span>
         </div>
         <div class="cmd-body">
-          <div style="margin-bottom:8px">
-            <span class="cmd-prompt">$ </span>
-            <span class="cmd-text">pwd</span>
-          </div>
-          <div style="margin-bottom:8px">
-            <span class="cmd-prompt">$ </span>
-            <span class="cmd-text">ls</span>
-          </div>
-          <div>
-            <span class="cmd-prompt">$ </span>
-            <span class="cmd-text">ls -l /etc</span>
-          </div>
+          <div style="margin-bottom:10px"><span class="cmd-prompt">$ </span><span class="cmd-text">pwd</span></div>
+          <div style="margin-bottom:10px"><span class="cmd-prompt">$ </span><span class="cmd-text">ls</span></div>
+          <div><span class="cmd-prompt">$ </span><span class="cmd-text">ls -l /etc</span></div>
           <div class="cmd-output" id="out1">
-<span style="color:#3fb950">/home/student-01</span>                     ← 今いる場所
+<span class="hl">/home/student-01</span>                     ← 今いる場所
 <span style="color:#58a6ff">Desktop  Documents  Downloads</span>        ← ホームのフォルダ一覧
-<span style="color:#768390">total 120</span>
-<span style="color:#768390">drwxr-xr-x  3 root root 4096 Jan  1 00:00 apt</span>
-<span style="color:#768390">drwxr-xr-x  2 root root 4096 Jan  1 00:00 bash_completion.d</span>
-<span style="color:#768390">...</span>                                      ← /etc の中のファイル一覧
+<span style="color:#9aacbc">total 120
+drwxr-xr-x  3 root root 4096 Jan  1 00:00 apt
+...</span>                                      ← /etc の中のファイル一覧
           </div>
         </div>
       </div>
-      <button class="show-btn" id="btn1" onclick="showOut('out1','btn1')">▼ 実行結果を確認する</button>
+      <button class="show-btn" id="btn1" onclick="showOut()">▼ 実行結果を確認する</button>
     </div>
-
     <div class="expl green">
-      <strong>うまくいかないときは：</strong>コマンドを間違えた場合は <code>Ctrl + C</code> で中断できます。
-      それでも動かない場合はページを再読み込みしてもう一度試してください。
+      <strong>うまくいかないときは：</strong>コマンドを間違えた場合は <code>Ctrl + C</code> で中断できます。それでも動かない場合はページを再読み込みしてもう一度試してください。
     </div>
   </div>
 
-  <!-- ページナビ -->
+  <!-- ナビゲーション -->
   <div class="page-nav">
-    <a href="index.html" class="nav-btn">← コース一覧に戻る</a>
+    <a href="index.html" class="nav-btn">← コース概要に戻る</a>
     <div class="nav-center">Part 0 — 操作入門</div>
     <a href="lesson_iscsi_discovery.html" class="nav-btn primary">最初のレッスンへ →</a>
   </div>
 
 </div>
+</div>
+
 <script>
-function showOut(outId, btnId) {
-  document.getElementById(outId).classList.add('visible');
-  document.getElementById(btnId).style.display = 'none';
+function showOut() {
+  document.getElementById('out1').style.display = 'block';
+  document.getElementById('btn1').style.display = 'none';
 }
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('out1').style.display = 'none';
+});
 </script>
+<script src="common.js"></script>
 <script src="sidebar.js"></script>
 </body>
 </html>
