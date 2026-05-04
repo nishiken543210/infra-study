@@ -27,44 +27,60 @@ function switchTab(name) {
 }
 
 /* ════════════════════════════════
-   AIヒント機能
+   AIオーバーレイ機能
    使い方：
-   1. <button class="hint-btn" onclick="toggleHint()">🤖 AIにヒントを聞く</button>
-   2. <div class="hint-panel" id="hint-panel"> ... </div>
-   3. data-lesson属性でレッスン名を指定
-      <body data-page="..." data-lesson="Chapter 1-3 iSCSI Discovery">
+   - タブバーに <button id="ai-overlay-btn" onclick="toggleAI()"> を追加
+   - body直下に ai-overlay-backdrop と ai-overlay-panel を追加
+   - <body data-lesson="Chapter 1-3 ..."> でレッスン名を指定
 ════════════════════════════════ */
-function toggleHint() {
-  const panel = document.getElementById('hint-panel');
-  if (panel) panel.classList.toggle('open');
+function toggleAI() {
+  const panel    = document.getElementById('ai-overlay-panel');
+  const backdrop = document.getElementById('ai-overlay-backdrop');
+  const btn      = document.getElementById('ai-overlay-btn');
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  backdrop.classList.toggle('open', !isOpen);
+  if (btn) btn.classList.toggle('active', !isOpen);
+  if (!isOpen) {
+    setTimeout(() => {
+      const input = document.getElementById('ai-input');
+      if (input) input.focus();
+    }, 300);
+  }
 }
 
-async function sendHint() {
-  const input    = document.getElementById('hint-input');
-  const messages = document.getElementById('hint-messages');
-  const sendBtn  = document.getElementById('hint-send');
+function closeAI() {
+  document.getElementById('ai-overlay-panel')?.classList.remove('open');
+  document.getElementById('ai-overlay-backdrop')?.classList.remove('open');
+  document.getElementById('ai-overlay-btn')?.classList.remove('active');
+}
+
+async function sendAI() {
+  const input    = document.getElementById('ai-input');
+  const messages = document.getElementById('ai-messages');
+  const sendBtn  = document.getElementById('ai-send');
   if (!input || !messages || !sendBtn) return;
 
   const question = input.value.trim();
   if (!question) return;
 
-  // レッスン名をbody属性から取得
   const lesson = document.body.getAttribute('data-lesson') || '不明';
 
-  // ユーザーメッセージを表示
   const userMsg = document.createElement('div');
-  userMsg.className = 'hint-msg user';
+  userMsg.className = 'ai-msg user';
   userMsg.textContent = question;
   messages.appendChild(userMsg);
 
   const loadingMsg = document.createElement('div');
-  loadingMsg.className = 'hint-msg loading';
-  loadingMsg.id = 'hint-loading';
+  loadingMsg.className = 'ai-msg loading';
+  loadingMsg.id = 'ai-loading';
   loadingMsg.textContent = '考え中...';
   messages.appendChild(loadingMsg);
 
   messages.scrollTop = messages.scrollHeight;
   input.value = '';
+  input.style.height = 'auto';
   sendBtn.disabled = true;
 
   try {
@@ -74,28 +90,36 @@ async function sendHint() {
       body: JSON.stringify({ question, lesson })
     });
     const data = await res.json();
-
     loadingMsg.remove();
     const aiMsg = document.createElement('div');
-    aiMsg.className = 'hint-msg ai';
+    aiMsg.className = 'ai-msg ai';
     aiMsg.innerHTML = (data.answer || 'エラーが発生しました').replace(/\n/g, '<br>');
     messages.appendChild(aiMsg);
     messages.scrollTop = messages.scrollHeight;
-
   } catch (e) {
-    loadingMsg.className = 'hint-msg ai';
+    loadingMsg.className = 'ai-msg ai';
     loadingMsg.textContent = 'エラーが発生しました。もう一度試してください。';
   } finally {
     sendBtn.disabled = false;
+    input.focus();
   }
 }
 
-// Enterキーで送信
+// 後方互換
+function toggleHint() { toggleAI(); }
+function sendHint()   { sendAI(); }
+
+// Enterキーで送信（ai-input対応）
 document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('hint-input');
+  const input = document.getElementById('ai-input');
   if (input) {
     input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') sendHint();
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAI(); }
+    });
+    // テキストエリアの自動高さ調整
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 100) + 'px';
     });
   }
 });

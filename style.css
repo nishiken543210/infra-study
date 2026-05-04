@@ -282,54 +282,109 @@ h2 { font-size: 22px; font-weight: 500; color: #e6edf3; margin-bottom: 12px; lin
 }
 
 /* ════════════════════════════════
-   AIヒントパネル
+   AIオーバーレイ
 ════════════════════════════════ */
-.hint-btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 8px 18px; border-radius: 8px; margin-top: 16px;
-  background: #1c1830; border: 1px solid var(--purple); color: var(--purple);
-  font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
+.ai-overlay-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 0 18px; height: 44px; flex-shrink: 0;
+  background: #1c1830; border: none;
+  border-left: 1px solid var(--border);
+  color: var(--purple); font-size: 13px;
+  font-family: 'Noto Sans JP', sans-serif;
   cursor: pointer; transition: all 0.15s;
+  white-space: nowrap;
 }
-.hint-btn:hover { background: #231a3d; }
-.hint-panel {
-  display: none; margin-top: 16px;
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 10px; overflow: hidden;
+.ai-overlay-btn:hover { background: #231a3d; }
+.ai-overlay-btn.active { background: #231a3d; color: #d4b0ff; }
+
+/* オーバーレイ背景 */
+.ai-overlay-backdrop {
+  display: none; position: fixed;
+  inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.3);
 }
-.hint-panel.open { display: block; }
-.hint-header {
+.ai-overlay-backdrop.open { display: block; }
+
+/* AIパネル本体 */
+.ai-overlay-panel {
+  position: fixed; top: 44px; right: 0;
+  width: 380px; height: calc(100vh - 44px);
+  background: var(--bg2); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 400; transform: translateX(100%);
+  transition: transform 0.25s ease;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.4);
+}
+.ai-overlay-panel.open { transform: translateX(0); }
+
+.ai-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; background: #1c1830;
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.ai-panel-title {
   display: flex; align-items: center; gap: 8px;
-  padding: 10px 16px; background: #1c1830;
+  font-size: 13px; font-weight: 500; color: var(--purple);
+}
+.ai-panel-close {
+  background: none; border: none; color: var(--muted);
+  font-size: 18px; cursor: pointer; padding: 2px 6px;
+  border-radius: 4px; line-height: 1; transition: all 0.15s;
+}
+.ai-panel-close:hover { background: var(--bg3); color: var(--text); }
+
+.ai-panel-lesson {
+  padding: 8px 18px; background: var(--bg3);
   border-bottom: 1px solid var(--border);
-  font-size: 12px; color: var(--purple);
+  font-size: 11px; color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
 }
-.hint-messages {
-  padding: 14px 16px; max-height: 280px; overflow-y: auto;
-  display: flex; flex-direction: column; gap: 10px;
+
+.ai-messages {
+  flex: 1; overflow-y: auto; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
 }
-.hint-msg {
-  font-size: 13px; line-height: 1.8; padding: 10px 14px;
-  border-radius: 8px; max-width: 90%;
+.ai-msg {
+  font-size: 14px; line-height: 1.85; padding: 12px 14px;
+  border-radius: 10px; max-width: 95%;
 }
-.hint-msg.user { background: #1c2d3d; color: var(--accent); align-self: flex-end; border: 1px solid #2a4060; }
-.hint-msg.ai   { background: #1c1830; color: var(--text);   align-self: flex-start; border: 1px solid #2a2040; }
-.hint-msg.loading { color: var(--muted); font-style: italic; }
-.hint-input-row {
-  display: flex; gap: 8px; padding: 12px 16px;
-  border-top: 1px solid var(--border); background: var(--bg3);
+.ai-msg.user {
+  background: #1c2d3d; color: var(--accent);
+  align-self: flex-end; border: 1px solid #2a4060;
+  border-radius: 10px 10px 2px 10px;
 }
-.hint-input {
+.ai-msg.ai {
+  background: var(--bg3); color: var(--text);
+  align-self: flex-start; border: 1px solid var(--border);
+  border-radius: 10px 10px 10px 2px;
+}
+.ai-msg.loading { color: var(--muted); font-style: italic; }
+
+.ai-input-area {
+  padding: 12px 16px; border-top: 1px solid var(--border);
+  background: var(--bg3); flex-shrink: 0;
+}
+.ai-input-hint {
+  font-size: 11px; color: var(--muted); margin-bottom: 8px;
+}
+.ai-input-row { display: flex; gap: 8px; }
+.ai-input {
   flex: 1; background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 6px; padding: 8px 12px; color: var(--text);
+  border-radius: 8px; padding: 9px 12px; color: var(--text);
   font-size: 13px; font-family: 'Noto Sans JP', sans-serif; outline: none;
+  resize: none; min-height: 40px; max-height: 100px;
 }
-.hint-input:focus { border-color: var(--purple); }
-.hint-send {
-  padding: 8px 16px; border-radius: 6px;
+.ai-input:focus { border-color: var(--purple); }
+.ai-send {
+  padding: 9px 16px; border-radius: 8px; flex-shrink: 0;
   background: var(--purple); border: none; color: #0d1117;
   font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
   cursor: pointer; transition: opacity 0.15s; font-weight: 500;
+  align-self: flex-end;
 }
-.hint-send:hover { opacity: 0.85; }
-.hint-send:disabled { opacity: 0.4; cursor: not-allowed; }
+.ai-send:hover { opacity: 0.85; }
+.ai-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* 古いヒントパネルは非表示（後方互換） */
+.hint-btn, .hint-panel { display: none !important; }
