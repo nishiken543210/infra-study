@@ -99,3 +99,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+/* ════════════════════════════════
+   アコーディオン（ステップ形式）
+   使い方：toggleStep(this) を step-header の onclick に指定
+════════════════════════════════ */
+function toggleStep(header) {
+  const section = header.closest('.step-section');
+  if (!section) return;
+  const isOpen = section.classList.contains('open');
+
+  // 同じ親の中の全ステップを閉じる（1つだけ開く場合はこちら）
+  // 複数同時に開きたい場合は以下の3行をコメントアウト
+  const parent = section.parentElement;
+  parent.querySelectorAll('.step-section').forEach(s => s.classList.remove('open'));
+
+  // クリックしたものをトグル
+  if (!isOpen) section.classList.add('open');
+}

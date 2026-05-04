@@ -57,40 +57,65 @@
         </div>
       </div>
 
-      <div class="section-label"><span class="step-dot">1</span>コマンドを打つと何が起きるか</div>
-      <div class="expl">
-        このコマンドは、あなたのVMから指定したIPアドレスのサーバに向かって「ディスクを提供できますか？」と問い合わせます。
-        サーバが応答すると、<strong>接続に必要な名前（IQN）</strong>が返ってきます。
-        IQNとは「このストレージサーバの固有ID」のようなものです。
-        次のステップでこのIDを使って実際に接続します。
-      </div>
-
-      <div class="section-label"><span class="step-dot">2</span>コマンドの構造</div>
-      <div class="cmd-block">
-        <div class="cmd-header">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span>receiver-vm — bash</span>
+      <!-- ステップ1（最初から開いている） -->
+      <div class="step-section open">
+        <div class="step-header" onclick="toggleStep(this)">
+          <span class="step-num">1</span>
+          <span class="step-title">コマンドを打つと何が起きるか</span>
+          <span class="step-chevron">▼</span>
         </div>
-        <div class="cmd-body">
-          <span class="cmd-prompt">$ </span>
-          <span class="cmd-text">sudo iscsiadm -m discovery -t sendtargets -p 192.168.1.201</span>
+        <div class="step-body">
+          <div class="expl">
+            このコマンドは、あなたのVMから指定したIPアドレスのサーバに向かって「ディスクを提供できますか？」と問い合わせます。
+            サーバが応答すると、<strong>接続に必要な名前（IQN）</strong>が返ってきます。
+            IQNとは「このストレージサーバの固有ID」のようなものです。
+            次のステップでこのIDを使って実際に接続します。
+          </div>
         </div>
       </div>
 
-      <div class="expl green">
-        成功すると<strong>接続名（IQN）</strong>（例：<code>iqn.2024-01.local:storage</code>）と接続先IPが返ってきます。
-        この接続名を使って次のステップ「ログイン（実際に繋ぐ）」に進みます。
+      <!-- ステップ2（最初は閉じている） -->
+      <div class="step-section">
+        <div class="step-header" onclick="toggleStep(this)">
+          <span class="step-num">2</span>
+          <span class="step-title">コマンドの構造</span>
+          <span class="step-chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <div class="cmd-block">
+            <div class="cmd-header">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span>receiver-vm — bash</span>
+            </div>
+            <div class="cmd-body">
+              <span class="cmd-prompt">$ </span>
+              <span class="cmd-text">sudo iscsiadm -m discovery -t sendtargets -p 192.168.1.201</span>
+            </div>
+          </div>
+          <div class="expl green">
+            成功すると<strong>接続名（IQN）</strong>（例：<code>iqn.2024-01.local:storage</code>）と接続先IPが返ってきます。
+            この接続名を使って次のステップ「ログイン（実際に繋ぐ）」に進みます。
+          </div>
+        </div>
       </div>
 
-      <div class="section-label"><span class="step-dot">3</span>実際に打ってみる</div>
-      <div class="expl">
-        「ターミナル」タブに切り替えて、演習VMにログインしてからコマンドを実行してください。<br>
-        ターミナルの黒い画面を<strong>クリックしてからキーボード入力</strong>してください。
+      <!-- ステップ3（最初は閉じている） -->
+      <div class="step-section">
+        <div class="step-header" onclick="toggleStep(this)">
+          <span class="step-num">3</span>
+          <span class="step-title">実際に打ってみる</span>
+          <span class="step-chevron">▼</span>
+        </div>
+        <div class="step-body">
+          <div class="expl">
+            「ターミナル」タブに切り替えて、演習VMにログインしてからコマンドを実行してください。<br>
+            ターミナルの黒い画面を<strong>クリックしてからキーボード入力</strong>してください。
+          </div>
+          <button class="goto-terminal" onclick="switchTab('terminal')">
+            💻 ターミナルタブを開いて実行する →
+          </button>
+        </div>
       </div>
-
-      <button class="goto-terminal" onclick="switchTab('terminal')">
-        💻 ターミナルタブを開いて実行する →
-      </button>
 
       <!-- AIヒント -->
       <button class="hint-btn" onclick="toggleHint()">
