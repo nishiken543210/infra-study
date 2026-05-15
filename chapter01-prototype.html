@@ -146,10 +146,16 @@ body{padding-bottom:64px}
 .foot-btn.complete{margin:0 auto;background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);font-weight:500}
 
 /* ── Terminal pane ── */
-.term-head{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-family:var(--font-mono)}
+.term-head{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-family:var(--font-mono);flex-wrap:wrap}
 .term-head .label{color:var(--text-strong);font-size:13px}
+.term-head .term-newtab-link{margin-left:auto;font-size:11px;color:var(--accent);padding:4px 10px;border:1px solid var(--accent-border);border-radius:99px;background:var(--accent-bg);text-decoration:none;font-family:var(--font-mono);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.term-head .term-newtab-link:hover{background:var(--accent-bg-hi);text-decoration:none}
 .term-frame{flex:1;background:#090d13;border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px;text-align:center;position:relative;overflow:hidden}
 .term-frame.fallback::before{content:'';position:absolute;inset:0;background:radial-gradient(500px 200px at 50% 50%,rgba(88,166,255,0.06),transparent 70%);pointer-events:none}
+.term-frame.live{padding:0;background:#000}
+.term-frame.live .term-iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.term-frame.live .term-fallback-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px;text-align:center;background:#090d13;z-index:1;pointer-events:none}
+.term-frame.live .term-iframe{z-index:2}
 .term-fallback-icon{font-size:32px;margin-bottom:14px;color:var(--muted-dim);font-family:var(--font-mono)}
 .term-fallback-title{font-size:14px;color:var(--text-strong);font-weight:500;margin-bottom:6px}
 .term-fallback-msg{font-size:12px;color:var(--muted);line-height:1.7;max-width:280px}
@@ -512,18 +518,26 @@ body{padding-bottom:64px}
   <aside class="terminal-pane">
     <div class="term-head">
       <span class="label">⌨ 踏み台 <code style="font-size:12px">workstation01</code></span>
-      <span style="color:var(--muted);font-size:11px">ここから ssh でジャンプ</span>
+      <a href="https://lab.infra-study.org/guacamole/" target="_blank" rel="noopener" class="term-newtab-link" title="ターミナルを別タブで開く（埋め込みが表示できない場合はこちらから）">↗ 別タブで開く</a>
     </div>
 
-    <!-- Guacamole iframe フォールバック表示（ML30 停止時のデフォルト） -->
-    <div class="term-frame fallback">
-      <div class="term-fallback-icon">⌨</div>
-      <div class="term-fallback-title">ターミナル準備中</div>
-      <div class="term-fallback-msg">
-        踏み台 <code>workstation01</code> が現在停止しています。<br>
-        講師から接続情報を受け取ったあと、<br>
-        ここに <code>alice@workstation01:~$</code> が表示されます。
+    <!-- Guacamole iframe 埋め込み（実験中 / Cloudflare Access の埋め込み制限に該当した場合は背後の fallback が見える） -->
+    <div class="term-frame live">
+      <div class="term-fallback-overlay" aria-hidden="true">
+        <div class="term-fallback-icon">⌨</div>
+        <div class="term-fallback-title">ターミナルを準備中…</div>
+        <div class="term-fallback-msg">
+          埋め込みが表示できない場合は<br>
+          上の <strong>「↗ 別タブで開く」</strong> から<br>
+          ログインしてください。<br>
+          <small style="display:block;margin-top:8px;color:var(--muted-dim)">初回はメール OTP 認証画面が出ます</small>
+        </div>
       </div>
+      <iframe class="term-iframe"
+              src="https://lab.infra-study.org/guacamole/"
+              title="演習用ターミナル（workstation01 経由）"
+              allow="clipboard-read; clipboard-write"
+              loading="lazy"></iframe>
     </div>
 
     <div style="display:flex;justify-content:space-between;align-items:center">
@@ -532,7 +546,7 @@ body{padding-bottom:64px}
         <button class="term-ctl">切断</button>
         <button class="term-ctl">リセット</button>
       </div>
-      <div class="term-status"><span class="status-dot"></span>サーバ非稼働</div>
+      <div class="term-status"><span class="status-dot"></span>iframe 試験中</div>
     </div>
 
     <div class="checklist prominent">
