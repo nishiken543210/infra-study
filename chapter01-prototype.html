@@ -30,7 +30,7 @@ ul{list-style:none}
 
 /* ── Header ── */
 .site-header{position:sticky;top:0;z-index:50;background:rgba(13,17,23,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
-.header-inner{max-width:1400px;margin:0 auto;height:60px;padding:0 24px;display:flex;align-items:center;gap:32px}
+.header-inner{max-width:min(96vw,1800px);margin:0 auto;height:60px;padding:0 24px;display:flex;align-items:center;gap:32px}
 .brand{display:flex;align-items:center;gap:10px}
 .brand-mark{width:28px;height:28px;border-radius:6px;background:var(--accent-bg);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:600;color:var(--accent);font-size:13px}
 .brand-text{display:flex;flex-direction:column;line-height:1.15}
@@ -47,7 +47,7 @@ ul{list-style:none}
 
 /* ── Chapter Meta Bar ── */
 .meta-bar{position:sticky;top:60px;z-index:49;border-bottom:1px solid var(--border);background:rgba(22,27,34,0.92);backdrop-filter:blur(8px)}
-.meta-inner{max-width:1400px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:18px;font-size:13px}
+.meta-inner{max-width:min(96vw,1800px);margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:18px;font-size:13px}
 .progress{display:flex;align-items:center;gap:12px;min-width:280px}
 .progress-label{font-family:var(--font-mono);font-size:13px;color:var(--accent);letter-spacing:0.04em;font-weight:600;white-space:nowrap}
 .progress-bar{flex:1;height:6px;background:var(--bg3);border-radius:99px;overflow:hidden;border:1px solid var(--border);min-width:120px}
@@ -58,7 +58,7 @@ ul{list-style:none}
 .meta-progress input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent)}
 
 /* ── 2-pane layout ── */
-.pane-wrap{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:60% 40%;min-height:calc(100vh - 60px - 48px)}
+.pane-wrap{max-width:min(96vw,1800px);margin:0 auto;display:grid;grid-template-columns:60% 40%;min-height:calc(100vh - 60px - 48px)}
 .content-pane{padding:32px 28px 40px;border-right:1px solid var(--border);overflow-y:auto}
 .terminal-pane{background:var(--bg2);padding:12px 14px;display:flex;flex-direction:column;gap:10px;position:sticky;top:108px;height:calc(100vh - 108px - 60px);align-self:start}
 
@@ -155,29 +155,29 @@ body{padding-bottom:64px}
 
 /* connect cards (ハイブリッド接続選択) */
 .connect-stack{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0}
-.connect-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;transition:border-color 0.2s ease}
+.connect-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;transition:border-color 0.2s ease}
 .connect-card:hover{border-color:var(--accent-border)}
 .connect-card.option-a{border-left:3px solid var(--accent)}
 .connect-card.option-b{border-left:3px solid var(--purple)}
-.connect-card-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.connect-card-badge{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.06em;padding:2px 7px;border-radius:99px;text-transform:uppercase}
+.connect-card-head{display:flex;align-items:center;gap:9px;margin-bottom:10px;flex-wrap:wrap}
+.connect-card-badge{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.06em;padding:3px 9px;border-radius:99px;text-transform:uppercase}
 .connect-card.option-a .connect-card-badge{background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent)}
 .connect-card.option-b .connect-card-badge{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text)}
-.connect-card-title{font-size:14px;color:var(--text-strong);font-weight:500}
-.connect-card-desc{font-size:11.5px;color:var(--muted);line-height:1.65;margin-bottom:10px}
-.connect-card-desc strong{color:var(--text)}
-.connect-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 14px;border-radius:7px;font-size:12.5px;font-weight:500;font-family:var(--font-sans);cursor:pointer;text-decoration:none;transition:background 0.15s}
+.connect-card-title{font-size:15px;color:var(--text-strong);font-weight:500}
+.connect-card-desc{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px}
+.connect-card-desc strong{color:var(--text-strong);font-weight:600}
+.connect-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:11px 16px;border-radius:8px;font-size:13.5px;font-weight:500;font-family:var(--font-sans);cursor:pointer;text-decoration:none;transition:background 0.15s}
 .connect-btn .arr{font-family:var(--font-mono);opacity:0.7}
 .connect-card.option-a .connect-btn{background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent-text)}
 .connect-card.option-a .connect-btn:hover{background:var(--accent-bg-hi);text-decoration:none}
 .connect-card.option-b .connect-btn{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text)}
 .connect-card.option-b .connect-btn:hover{background:rgba(188,140,255,0.18);text-decoration:none}
-.connect-ssh-cmd{margin-top:8px;background:#090d13;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:var(--font-mono);font-size:11.5px;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:8px}
-.connect-ssh-cmd code{background:transparent;border:0;padding:0;color:var(--green-text);font-size:11.5px}
-.connect-ssh-cmd .mini-copy{font-family:var(--font-mono);font-size:10px;color:var(--accent);padding:2px 7px;border-radius:3px;border:1px solid var(--accent-border);background:var(--accent-bg);cursor:pointer;flex-shrink:0}
+.connect-ssh-cmd{margin-top:10px;background:#090d13;border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:var(--font-mono);font-size:12.5px;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.connect-ssh-cmd code{background:transparent;border:0;padding:0;color:var(--green-text);font-size:12.5px;word-break:break-all}
+.connect-ssh-cmd .mini-copy{font-family:var(--font-mono);font-size:11px;color:var(--accent);padding:4px 9px;border-radius:4px;border:1px solid var(--accent-border);background:var(--accent-bg);cursor:pointer;flex-shrink:0}
 .connect-ssh-cmd .mini-copy.copied{color:var(--green-text);border-color:var(--green-border);background:var(--green-bg)}
-.connect-card-meta{font-size:10.5px;color:var(--muted-dim);margin-top:6px;font-family:var(--font-mono);letter-spacing:0.02em}
-.connect-pending{font-size:10.5px;color:var(--amber-text);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:99px;padding:2px 8px;font-family:var(--font-mono);display:inline-block;margin-top:6px}
+.connect-card-meta{font-size:11.5px;color:var(--muted);margin-top:8px;font-family:var(--font-mono);letter-spacing:0.02em}
+.connect-pending{font-size:11.5px;color:var(--amber-text);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:99px;padding:3px 10px;font-family:var(--font-mono);display:inline-block;margin-top:8px}
 .term-controls{display:flex;gap:6px;font-size:11px}
 .term-ctl{padding:4px 10px;border-radius:4px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-family:var(--font-mono)}
 .term-ctl:hover{color:var(--text)}
