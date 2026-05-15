@@ -90,14 +90,14 @@ pre.ascii{background:var(--bg);border:1px solid var(--border);border-radius:8px;
 table.dir-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
 table.dir-table th,table.dir-table td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
 table.dir-table th{color:var(--muted);font-weight:500;background:var(--bg2)}
-table.dir-table td:first-child code{font-size:13px;color:var(--accent);background:var(--accent-bg);border-color:var(--accent-border)}
+table.dir-table td:first-child code{font-size:13px}
 table.dir-table tr:last-child td{border-bottom:none}
 
 /* code block w/ copy */
 .codeblock{position:relative;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin:14px 0;overflow:hidden}
 .codeblock-head{background:var(--bg3);padding:6px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
 .codeblock pre{padding:14px 16px;font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--text);overflow-x:auto}
-.codeblock pre .comment{color:var(--muted-dim)}
+.codeblock pre .comment{color:var(--muted)}
 .codeblock pre .prompt{color:var(--green)}
 .codeblock pre .kw{color:var(--purple)}
 .copy-btn{font-family:var(--font-mono);font-size:11px;color:var(--accent);padding:3px 10px;border-radius:4px;border:1px solid var(--accent-border);background:var(--accent-bg)}
@@ -185,6 +185,51 @@ body{padding-bottom:64px}
 .modal-close{margin-top:18px;padding:8px 18px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:13px;cursor:pointer}
 .modal-close:hover{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-border)}
 
+/* step number badge */
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent);font-family:var(--font-mono);font-size:11px;font-weight:600;margin-right:6px;flex-shrink:0}
+
+/* Objective grid (この章を終えるとできること) */
+.obj-intro{font-size:14.5px;color:var(--text);font-weight:400;line-height:1.85;margin:14px 0 6px}
+.obj-intro strong{color:var(--text-strong);font-weight:600}
+.objective-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0 6px;position:relative}
+.obj-card{position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg3) 100%);border:1px solid var(--border);border-radius:14px;padding:20px 14px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:11px;transition:transform 0.2s ease,border-color 0.2s ease,box-shadow 0.2s ease}
+.obj-card:hover{border-color:var(--accent-border);transform:translateY(-2px);box-shadow:0 6px 24px rgba(88,166,255,0.08)}
+.obj-icon{width:100%;min-height:84px;color:var(--text);background:var(--bg);border:1px solid var(--accent-border);border-radius:8px;padding:9px 11px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:3px;font-family:var(--font-mono);font-size:11.5px;line-height:1.5;letter-spacing:0;text-align:left;overflow:hidden;transition:transform 0.2s ease,border-color 0.2s ease,background 0.2s ease;position:relative}
+.obj-icon::before{content:'';position:absolute;top:0;left:0;right:0;height:14px;background:linear-gradient(180deg,var(--bg3) 0%,transparent 100%);opacity:0.55;pointer-events:none}
+.obj-icon .op-line{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.obj-icon .op-plus{color:var(--green);font-weight:600;width:9px;display:inline-block}
+.obj-icon .op-x{color:var(--coral);font-weight:600;width:9px;display:inline-block}
+.obj-icon .op-arrow{color:var(--accent);font-weight:600;font-size:13px;width:9px;display:inline-block}
+.obj-icon .op-prompt{color:var(--green);font-weight:600}
+.obj-icon .op-cmd{color:var(--purple);font-weight:600}
+.obj-icon .op-dir{color:var(--accent-text)}
+.obj-icon .op-file{color:var(--text-strong)}
+.obj-icon .op-hint{color:var(--muted);font-size:10px;letter-spacing:0.04em;text-transform:uppercase}
+.obj-icon .op-strike{text-decoration:line-through;text-decoration-color:var(--coral);color:var(--muted)}
+.obj-icon .op-bar{display:inline-block;height:4px;background:var(--muted-dim);border-radius:99px;flex:none}
+.obj-icon .op-bar.w-full{width:78px}
+.obj-icon .op-bar.w-md{width:54px}
+.obj-icon .op-bar.w-sm{width:34px}
+.obj-icon .op-cursor{display:inline-block;width:6px;height:11px;background:var(--accent);vertical-align:-2px;margin-left:2px;animation:obj-blink 1.1s steps(2,end) infinite}
+@keyframes obj-blink{50%{opacity:0}}
+.obj-card.danger .obj-icon{border-color:var(--coral-border)}
+.obj-card:hover .obj-icon{border-color:var(--accent);background:#0a0f16}
+.obj-card.danger:hover .obj-icon{border-color:var(--coral)}
+.obj-card.danger:hover{border-color:var(--coral-border);box-shadow:0 6px 24px rgba(247,129,102,0.08)}
+.obj-verb{font-size:19px;color:var(--text-strong);font-weight:500;letter-spacing:0.08em;margin:0;line-height:1.2}
+.obj-desc{font-size:13.5px;color:var(--text);font-weight:400;line-height:1.65;margin:0;min-height:46px;display:flex;align-items:center;justify-content:center}
+.obj-cmds{margin-top:auto;font-family:var(--font-mono);font-size:13.5px;font-weight:600;letter-spacing:0.08em;color:var(--text-strong);background:var(--accent-bg-hi);border:1px solid var(--accent);border-radius:99px;padding:7px 16px;white-space:nowrap}
+.obj-card.danger .obj-cmds{color:var(--text-strong);background:rgba(247,129,102,0.18);border-color:var(--coral)}
+.obj-card:not(:last-child)::after{content:'';position:absolute;right:-10px;top:50%;width:10px;height:10px;transform:translateY(-50%) rotate(45deg);border-top:2px solid var(--accent);border-right:2px solid var(--accent);z-index:2}
+@media (max-width:1100px){
+  .objective-grid{grid-template-columns:repeat(2,1fr);gap:14px 18px}
+  .obj-card:nth-child(2)::after{display:none}
+}
+@media (max-width:600px){
+  .objective-grid{grid-template-columns:1fr}
+  .obj-card::after{display:none}
+}
+
 /* responsive */
 @media (max-width:1100px){
   .pane-wrap{grid-template-columns:1fr}
@@ -251,12 +296,53 @@ body{padding-bottom:64px}
     <p class="callout-key">AWS の EC2 でも、自社オンプレの古いサーバでも、Raspberry Pi でも ── <strong>設定は <code>/etc</code>・ログは <code>/var/log</code>・一時ファイルは <code>/tmp</code></strong>。この地図は変わりません。一度頭に入れてしまえば、<strong>初めて触るサーバでも 5 秒で当たりがつく</strong>。これがこの章のゴールです。</p>
 
     <h2>この章を終えるとできること</h2>
-    <ul class="bullets">
-      <li>Linux のファイルシステムが「一本の木構造」であることを説明できる</li>
-      <li><code>/home</code>、<code>/etc</code>、<code>/var</code>、<code>/tmp</code>、<code>/usr</code> それぞれの<strong>役割の違い</strong>を自分の言葉で説明できる</li>
-      <li><code>cd</code> と <code>ls</code> と <code>pwd</code> でディレクトリを自由に行き来できる</li>
-      <li>絶対パスと相対パスを使い分けられる</li>
-    </ul>
+    <p class="obj-intro">Linux のファイルシステムという「地図」を頭に入れて、<strong>4 つの操作</strong>でどこにでも自在に動き回れるようになります。</p>
+
+    <div class="objective-grid">
+      <div class="obj-card">
+        <div class="obj-icon" aria-label="cd でディレクトリを移動する例">
+          <div class="op-line"><span class="op-prompt">$</span> <span class="op-cmd">cd</span> <span class="op-dir">/var/log</span></div>
+          <div class="op-line"><span class="op-arrow">↓</span></div>
+          <div class="op-line"><span class="op-dir">learner01:/var/log</span><span class="op-hint">$</span></div>
+        </div>
+        <div class="obj-verb">動く</div>
+        <div class="obj-desc">cd でディレクトリを<br>自由に移動できる</div>
+        <span class="obj-cmds">cd</span>
+      </div>
+
+      <div class="obj-card">
+        <div class="obj-icon" aria-label="ls でディレクトリの中身を一覧表示する例">
+          <div class="op-line"><span class="op-prompt">$</span> <span class="op-cmd">ls</span> <span class="op-dir">/etc</span></div>
+          <div class="op-line"><span class="op-bar w-full"></span></div>
+          <div class="op-line"><span class="op-bar w-md"></span></div>
+          <div class="op-line"><span class="op-bar w-sm"></span></div>
+        </div>
+        <div class="obj-verb">眺める</div>
+        <div class="obj-desc">ls でディレクトリの<br>中身を確認できる</div>
+        <span class="obj-cmds">ls</span>
+      </div>
+
+      <div class="obj-card">
+        <div class="obj-icon" aria-label="pwd で今いるディレクトリのパスを確認する例">
+          <div class="op-line"><span class="op-prompt">$</span> <span class="op-cmd">pwd</span></div>
+          <div class="op-line"><span class="op-dir">/var/log</span></div>
+        </div>
+        <div class="obj-verb">知る</div>
+        <div class="obj-desc">pwd で今どこに居るか<br>正確に確認できる</div>
+        <span class="obj-cmds">pwd</span>
+      </div>
+
+      <div class="obj-card">
+        <div class="obj-icon" aria-label="絶対パスと相対パスの違いを示す例">
+          <div class="op-line"><span class="op-dir">/home/student</span><span class="op-hint">絶対</span></div>
+          <div class="op-line"><span class="op-arrow">↕</span></div>
+          <div class="op-line"><span class="op-file">../student</span><span class="op-hint">相対</span></div>
+        </div>
+        <div class="obj-verb">書く</div>
+        <div class="obj-desc">絶対パスと相対パスを<br>使い分けられる</div>
+        <span class="obj-cmds">/ · ..</span>
+      </div>
+    </div>
 
     <h2>概念説明</h2>
 
