@@ -148,18 +148,36 @@ body{padding-bottom:64px}
 /* ── Terminal pane ── */
 .term-head{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-family:var(--font-mono);flex-wrap:wrap}
 .term-head .label{color:var(--text-strong);font-size:13px}
-.term-head .term-newtab-link{margin-left:auto;font-size:11px;color:var(--accent);padding:4px 10px;border:1px solid var(--accent-border);border-radius:99px;background:var(--accent-bg);text-decoration:none;font-family:var(--font-mono);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
-.term-head .term-newtab-link:hover{background:var(--accent-bg-hi);text-decoration:none}
-.term-frame{flex:1;background:#090d13;border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px;text-align:center;position:relative;overflow:hidden}
-.term-frame.fallback::before{content:'';position:absolute;inset:0;background:radial-gradient(500px 200px at 50% 50%,rgba(88,166,255,0.06),transparent 70%);pointer-events:none}
-.term-frame.live{padding:0;background:#000}
-.term-frame.live .term-iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
-.term-frame.live .term-fallback-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px;text-align:center;background:#090d13;z-index:1;pointer-events:none}
-.term-frame.live .term-iframe{z-index:2}
-.term-fallback-icon{font-size:32px;margin-bottom:14px;color:var(--muted-dim);font-family:var(--font-mono)}
-.term-fallback-title{font-size:14px;color:var(--text-strong);font-weight:500;margin-bottom:6px}
-.term-fallback-msg{font-size:12px;color:var(--muted);line-height:1.7;max-width:280px}
-.term-fallback-msg code{font-size:11px}
+.term-head .server-status{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-family:var(--font-mono);padding:3px 9px;border-radius:99px;background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber-text)}
+.term-head .server-status .status-dot{width:6px;height:6px;border-radius:50%;background:var(--amber)}
+.term-head .server-status.up{background:var(--green-bg);border-color:var(--green-border);color:var(--green-text)}
+.term-head .server-status.up .status-dot{background:var(--green)}
+
+/* connect cards (ハイブリッド接続選択) */
+.connect-stack{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0}
+.connect-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;transition:border-color 0.2s ease}
+.connect-card:hover{border-color:var(--accent-border)}
+.connect-card.option-a{border-left:3px solid var(--accent)}
+.connect-card.option-b{border-left:3px solid var(--purple)}
+.connect-card-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.connect-card-badge{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.06em;padding:2px 7px;border-radius:99px;text-transform:uppercase}
+.connect-card.option-a .connect-card-badge{background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent)}
+.connect-card.option-b .connect-card-badge{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text)}
+.connect-card-title{font-size:14px;color:var(--text-strong);font-weight:500}
+.connect-card-desc{font-size:11.5px;color:var(--muted);line-height:1.65;margin-bottom:10px}
+.connect-card-desc strong{color:var(--text)}
+.connect-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 14px;border-radius:7px;font-size:12.5px;font-weight:500;font-family:var(--font-sans);cursor:pointer;text-decoration:none;transition:background 0.15s}
+.connect-btn .arr{font-family:var(--font-mono);opacity:0.7}
+.connect-card.option-a .connect-btn{background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent-text)}
+.connect-card.option-a .connect-btn:hover{background:var(--accent-bg-hi);text-decoration:none}
+.connect-card.option-b .connect-btn{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text)}
+.connect-card.option-b .connect-btn:hover{background:rgba(188,140,255,0.18);text-decoration:none}
+.connect-ssh-cmd{margin-top:8px;background:#090d13;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:var(--font-mono);font-size:11.5px;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.connect-ssh-cmd code{background:transparent;border:0;padding:0;color:var(--green-text);font-size:11.5px}
+.connect-ssh-cmd .mini-copy{font-family:var(--font-mono);font-size:10px;color:var(--accent);padding:2px 7px;border-radius:3px;border:1px solid var(--accent-border);background:var(--accent-bg);cursor:pointer;flex-shrink:0}
+.connect-ssh-cmd .mini-copy.copied{color:var(--green-text);border-color:var(--green-border);background:var(--green-bg)}
+.connect-card-meta{font-size:10.5px;color:var(--muted-dim);margin-top:6px;font-family:var(--font-mono);letter-spacing:0.02em}
+.connect-pending{font-size:10.5px;color:var(--amber-text);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:99px;padding:2px 8px;font-family:var(--font-mono);display:inline-block;margin-top:6px}
 .term-controls{display:flex;gap:6px;font-size:11px}
 .term-ctl{padding:4px 10px;border-radius:4px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-family:var(--font-mono)}
 .term-ctl:hover{color:var(--text)}
@@ -514,39 +532,61 @@ body{padding-bottom:64px}
 
   </main>
 
-  <!-- ── Terminal pane ── -->
+  <!-- ── Terminal pane (ハイブリッド接続 / D-017) ── -->
   <aside class="terminal-pane">
     <div class="term-head">
-      <span class="label">⌨ 踏み台 <code style="font-size:12px">workstation01</code></span>
-      <a href="https://lab.infra-study.org/guacamole/" target="_blank" rel="noopener" class="term-newtab-link" title="ターミナルを別タブで開く（埋め込みが表示できない場合はこちらから）">↗ 別タブで開く</a>
+      <span class="label">⌨ 演習サーバへ接続する</span>
+      <span class="server-status" title="サーバの稼働状況（手動更新）"><span class="status-dot"></span>サーバ確認中</span>
     </div>
 
-    <!-- Guacamole iframe 埋め込み（実験中 / Cloudflare Access の埋め込み制限に該当した場合は背後の fallback が見える） -->
-    <div class="term-frame live">
-      <div class="term-fallback-overlay" aria-hidden="true">
-        <div class="term-fallback-icon">⌨</div>
-        <div class="term-fallback-title">ターミナルを準備中…</div>
-        <div class="term-fallback-msg">
-          埋め込みが表示できない場合は<br>
-          上の <strong>「↗ 別タブで開く」</strong> から<br>
-          ログインしてください。<br>
-          <small style="display:block;margin-top:8px;color:var(--muted-dim)">初回はメール OTP 認証画面が出ます</small>
+    <div class="connect-stack">
+
+      <!-- オプション A: Guacamole ブラウザ -->
+      <div class="connect-card option-a">
+        <div class="connect-card-head">
+          <span class="connect-card-badge">Option A</span>
+          <span class="connect-card-title">🌐 ブラウザで開く（Guacamole）</span>
+        </div>
+        <div class="connect-card-desc">
+          <strong>環境構築不要・すぐ開始</strong>できます。新しいタブでブラウザ内ターミナルが起動します。初回は <strong>メール OTP 認証</strong> 画面が出ます。
+        </div>
+        <a href="https://lab.infra-study.org/guacamole/" target="_blank" rel="noopener" class="connect-btn">
+          <span>🚀 別タブで Guacamole を開く</span>
+          <span class="arr">↗</span>
+        </a>
+        <div class="connect-card-meta">lab.infra-study.org / workstation01 経由</div>
+      </div>
+
+      <!-- オプション B: 手元 PC から直接 SSH -->
+      <div class="connect-card option-b">
+        <div class="connect-card-head">
+          <span class="connect-card-badge">Option B</span>
+          <span class="connect-card-title">💻 手元 PC から SSH</span>
+        </div>
+        <div class="connect-card-desc">
+          <strong>本物のサーバ管理者体験</strong>。Mac / Linux は標準の <code>ssh</code>、Windows は Teraterm / OpenSSH / PuTTY。<strong>SSH 鍵認証</strong>で接続します。
+        </div>
+        <div class="connect-ssh-cmd">
+          <code id="sshCmd">ssh -i ~/.ssh/infra_study alice@ssh.infra-study.org</code>
+          <button class="mini-copy" data-copy-ssh>📋</button>
+        </div>
+        <div class="connect-card-meta">Cloudflare Tunnel TCP 経由 / 鍵認証のみ</div>
+        <span class="connect-pending">⏳ Phase B 準備中（受講者鍵配布フロー設計中）</span>
+      </div>
+
+      <!-- 接続後の流れ -->
+      <div class="connect-card" style="border-left:3px solid var(--green)">
+        <div class="connect-card-head">
+          <span class="connect-card-badge" style="background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text)">手順</span>
+          <span class="connect-card-title">📋 接続後の流れ</span>
+        </div>
+        <div class="connect-card-desc" style="margin-bottom:0">
+          <strong>1.</strong> 上の A または B で <code>alice@workstation01:~$</code> に到達<br>
+          <strong>2.</strong> 踏み台から <code>ssh student@learner01</code> でジャンプ<br>
+          <strong>3.</strong> <code>student@learner01:~$</code> で演習開始
         </div>
       </div>
-      <iframe class="term-iframe"
-              src="https://lab.infra-study.org/guacamole/"
-              title="演習用ターミナル（workstation01 経由）"
-              allow="clipboard-read; clipboard-write"
-              loading="lazy"></iframe>
-    </div>
 
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div class="term-controls">
-        <button class="term-ctl">全画面</button>
-        <button class="term-ctl">切断</button>
-        <button class="term-ctl">リセット</button>
-      </div>
-      <div class="term-status"><span class="status-dot"></span>iframe 試験中</div>
     </div>
 
     <div class="checklist prominent">
@@ -609,6 +649,20 @@ document.querySelectorAll('.copy-btn').forEach(btn=>{
       btn.textContent='✓ コピー済み — 右ターミナルで Cmd+V / Ctrl+V';
       btn.classList.add('copied');
       setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},2000);
+    }catch(e){console.error(e);}
+  });
+});
+
+// SSH command mini copy
+document.querySelectorAll('[data-copy-ssh]').forEach(btn=>{
+  btn.addEventListener('click',async()=>{
+    const cmd=document.getElementById('sshCmd');
+    if(!cmd)return;
+    try{
+      await navigator.clipboard.writeText(cmd.textContent.trim());
+      btn.textContent='✓';
+      btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent='📋';btn.classList.remove('copied');},1500);
     }catch(e){console.error(e);}
   });
 });
