@@ -323,22 +323,23 @@ body{padding-bottom:64px}
       <div class="codeblock-head"><span>bash</span></div>
       <pre><span class="kw">chmod</span> +x ~/bin/hello</pre>
     </div>
-    <p>何気なく打ったこの 1 行が、Linux の <strong>権限システム</strong> の入口です。<code>+x</code> は「<strong>実行権限を付ける</strong>」という意味で、これを忘れると <code>hello</code> が実行ファイルとして認識されません。</p>
-    <p>では、この権限はどこに保存されていて、誰がどう読んでいるのでしょうか？</p>
+    <p>何気なく打ったこの 1 行が、Linux の <strong>パーミッション</strong>（permission = 許可 / 日本語では「権限」）の入口です。<code>chmod</code> は <strong>ch</strong>ange <strong>mod</strong>e の略で、「<strong>mode = パーミッション</strong>」を変えるコマンドです。<code>+x</code> は「実行する許可を付ける」という意味で、これを忘れると <code>hello</code> が実行ファイルとして認識されません。</p>
+    <div class="callout-purple" style="font-size:13px">この章では <strong>「パーミッション」と「権限」は同じ意味</strong> として使います（章タイトルでは「パーミッション」、本文では文脈によって「権限」も）。Linux 公式ドキュメントでも <code>file mode</code> / <code>permission</code> / <code>権限</code> が混在しているので、両方の呼び方に慣れておくと、後の章や英語ドキュメントで困りません。</div>
+    <p>では、このパーミッションはどこに保存されていて、誰がどう読んでいるのでしょうか？</p>
     <div class="codeblock">
       <div class="codeblock-head"><span>bash</span></div>
       <pre><span class="kw">ls</span> -l ~/bin/hello
 <span class="comment"># → </span><span class="perm">-rwxrwxr-x</span><span class="comment"> 1 student student 70  5月 16 09:35 /home/student/bin/hello</span></pre>
     </div>
-    <p>左端の <code>-rwxrwxr-x</code> という呪文。これが「<strong>ファイルに付いた権限の表記</strong>」です。9 文字の中に <strong>「誰が」「何を」「できるか」</strong> がすべて詰まっています。</p>
-    <div class="callout-key">この章では、<strong>「誰が・何を・できるかを Linux はどう管理しているか」</strong> を読み解きます。これを掴むと：<br><br>
+    <p>左端の <code>-rwxrwxr-x</code> という呪文。これが「<strong>ファイルに付いたパーミッション（権限）の表記</strong>」です。9 文字の中に <strong>「誰が」「何を」「できるか」</strong> がすべて詰まっています。</p>
+    <div class="callout-key">この章では、Linux の <strong>パーミッション（権限）</strong> ── つまり <strong>「誰が・何を・できるか」を管理する仕組み</strong> を読み解きます。これを掴むと：<br><br>
     ・<code>-rwxr-xr--</code> をひと目で読めるようになる<br>
     ・<code>chmod 755</code> と <code>chmod u+x</code> の <strong>2 つの書き方</strong> が両方使える<br>
     ・「権限のないファイル」が出てきたとき、自分でグループを変えて解決できる<br>
     ・Part 3 以降の SSH 鍵 / nginx / PostgreSQL で出てくる「権限エラー」を恐れなくなる</div>
 
     <h2>この章を終えるとできること</h2>
-    <p class="obj-intro"><strong>権限の 4 動作</strong> を手に覚えます。</p>
+    <p class="obj-intro"><strong>パーミッションを扱う 4 動作</strong> を手に覚えます。</p>
 
     <div class="objective-grid">
       <div class="obj-card">
@@ -396,9 +397,35 @@ body{padding-bottom:64px}
       <div class="codeblock-head"><span>bash</span></div>
       <pre><span class="kw">id</span>
 <span class="comment"># → uid=1003(student) gid=1003(student) groups=1003(student)</span>
+<span class="comment">#       └──┬──┘          └──┬──┘            └──┬──┘</span>
+<span class="comment">#       ユーザID(名)      主グループID(名)    所属グループ全部</span>
+<span class="comment">#                       新規ファイルに      (主 + 副すべて)</span>
+<span class="comment">#                       自動で付くやつ</span></pre>
+    </div>
+    <p>3 つの数字は別物です：</p>
+    <table class="dir-table">
+      <tr><th>フィールド</th><th>意味</th><th>役割</th></tr>
+      <tr><td><code>uid=1003(student)</code></td><td><strong>ユーザ ID</strong>（数字）と <strong>ユーザ名</strong></td><td>あなたが誰か</td></tr>
+      <tr><td><code>gid=1003(student)</code></td><td><strong>主グループ ID</strong> と <strong>主グループ名</strong></td><td>新規ファイルに自動で付くグループ（必ず 1 つ）</td></tr>
+      <tr><td><code>groups=1003(student)</code></td><td>所属する <strong>すべてのグループ</strong>（主 + 副）</td><td>アクセスできるリソースの範囲</td></tr>
+    </table>
+    <div class="callout-amber">上の例は「ユーザ名 = グループ名 = <code>student</code>」「副グループなし」という Linux 初期状態。Linux は通常、ユーザ作成時に <strong>同名の主グループ</strong> を作るので、自分専用ユーザでは uid と gid のラベルが同じ名前になります。「番号は別だが、たまたま同じ <code>student</code> という名前」と読んでください。</div>
 
-<span class="kw">whoami</span>       <span class="comment"># → student     (ユーザ名だけ)</span>
-<span class="kw">groups</span>       <span class="comment"># → student     (所属グループだけ)</span></pre>
+    <h4>副グループに入っているユーザの例</h4>
+    <p>たとえば、<code>alice</code> という別ユーザが <code>sudo</code> と <code>adm</code> の 2 つの副グループに入っている場合、<code>id</code> の出力は以下のようになります：</p>
+    <div class="codeblock">
+      <div class="codeblock-head"><span>bash · 副グループ持ちの例</span></div>
+      <pre><span class="kw">id</span> alice
+<span class="comment"># → uid=1000(alice) gid=1000(alice) groups=1000(alice),</span><span class="var">27(sudo),4(adm)</span>
+<span class="comment">#                                         └──┬──┘    └──┬──┘ └─┬─┘</span>
+<span class="comment">#                                         主グループ  副グループ  副グループ</span>
+<span class="comment">#                                         (自分専用)   (sudo 可)  (ログ閲覧可)</span></pre>
+    </div>
+    <p><strong>副グループに入っているほど「できることが増える」</strong> わけです。この章の演習で <code>student</code> を <code>adm</code> に追加すると、上のような複数グループ持ちの状態になります。</p>
+    <div class="codeblock">
+      <div class="codeblock-head"><span>bash</span></div>
+      <pre><span class="kw">whoami</span>       <span class="comment"># → student     (ユーザ名だけ)</span>
+<span class="kw">groups</span>       <span class="comment"># → student     (副グループありなら複数表示される)</span></pre>
     </div>
 
     <h4>主グループと副グループ</h4>
@@ -418,7 +445,7 @@ body{padding-bottom:64px}
     </div>
     <p><code>/etc/passwd</code> と <code>/etc/group</code> は <strong>プレーンテキストの定義ファイル</strong> です。Linux のユーザ管理は驚くほどシンプルで、テキストエディタでも読めます（編集は専用コマンドを推奨）。</p>
 
-    <h4>🪟 Windows との違いコラム</h4>
+    <h4>🪟 コラム · Windows との違い</h4>
     <table class="dir-table">
       <tr><th>観点</th><th>Linux</th><th>Windows</th></tr>
       <tr><td><strong>主グループの概念</strong></td><td>必ず 1 つの主 + 複数の副</td><td>フラット（主の概念なし）</td></tr>
@@ -475,7 +502,7 @@ body{padding-bottom:64px}
     <p>例: <code>-rwxr-xr--</code> なら <strong>所有者は全部 OK / グループは読と実行 / 他人は読むだけ</strong>。先頭の <code>-</code> は「通常ファイル」を表します（<code>d</code> ならディレクトリ、<code>l</code> ならシンボリックリンク）。</p>
 
     <h3>3. 「変える」── 数字と記号の 2 方式</h3>
-    <p><code>chmod</code>（change mode）で権限を変えます。<strong>書き方は 2 通り</strong> あり、現場では両方使われます。</p>
+    <p><code>chmod</code>（<strong>ch</strong>ange <strong>mod</strong>e = ファイルの mode = パーミッションを変える）で権限を変えます。<strong>書き方は 2 通り</strong> あり、現場では両方使われます。</p>
 
     <h4>記号方式（部分的に変えたいとき）</h4>
     <div class="codeblock">
@@ -554,7 +581,7 @@ body{padding-bottom:64px}
     <p><code>-rw-------</code> = 自分だけ読み書き可、グループも他人もアクセス不可。</p>
     <div class="callout-amber"><strong>注意</strong>: SSH の鍵は権限がゆるいと SSH 側が <strong>「鍵を読まない」</strong> という安全装置を発動します。Part 3 で SSH 鍵を扱うときに再登場します。</div>
 
-    <h3>5. inode コラム ── 権限はどこに保存されている？</h3>
+    <h3>5. コラム · 権限はどこに保存されている？（inode の話）</h3>
     <p>「ファイルの権限」は <strong>ファイル本体（中身）に書かれているわけではありません</strong>。Linux のファイルシステムでは、ファイルごとに <strong>inode</strong> という小さな台帳が用意されていて、そこに権限・所有者・タイムスタンプなどのメタデータが書かれています。</p>
     <div class="codeblock">
       <div class="codeblock-head"><span>bash · inode を覗く</span></div>
