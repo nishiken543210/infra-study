@@ -54,12 +54,80 @@ ul{list-style:none}
 .meta-progress{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--muted)}
 .meta-progress input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent)}
 
+/* === Section indicator — inline inside meta-bar, right of "演習進捗 / 約 30 分" ===
+   Updates via JS as the user scrolls past each §NN h2. */
+.section-indicator{
+  display:flex;align-items:center;gap:10px;
+  flex:1;min-width:0;
+  padding:4px 12px;
+  background:var(--accent-bg);
+  border:1px solid var(--accent-border);
+  border-left:3px solid var(--accent);
+  border-radius:4px;
+  font-size:13px;
+}
+.section-indicator .si-num{
+  font-family:var(--font-mono);font-size:13px;font-weight:600;
+  color:var(--accent);letter-spacing:0.12em;
+  padding:2px 10px;border-radius:4px;
+  background:rgba(88,166,255,0.08);border:1px solid var(--accent-border);
+  white-space:nowrap;
+}
+.section-indicator .si-label{
+  font-family:var(--font-mono);font-size:11px;font-weight:600;
+  color:var(--accent-text);letter-spacing:0.16em;text-transform:uppercase;
+  white-space:nowrap;
+}
+.section-indicator .si-sep{color:var(--muted-dim);font-family:var(--font-mono)}
+.section-indicator .si-title{
+  color:var(--text-strong);font-family:var(--font-sans);font-size:13.5px;
+  font-weight:500;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
+}
+.section-indicator .si-progress{
+  margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--muted);
+  letter-spacing:0.08em;white-space:nowrap;
+}
+@media (max-width:700px){
+  .section-indicator{padding:7px 14px;gap:8px}
+  .section-indicator .si-title{font-size:12.5px}
+  .section-indicator .si-progress{display:none}
+}
+
 .pane-wrap{max-width:min(96vw,1800px);margin:0 auto;display:grid;grid-template-columns:60% 40%;min-height:calc(100vh - 60px - 48px)}
-.content-pane{padding:32px 28px 40px;border-right:1px solid var(--border);overflow-y:auto}
+.content-pane{padding:32px 28px 40px;border-right:1px solid var(--border)}
 .terminal-pane{background:var(--bg2);padding:12px 14px;display:flex;flex-direction:column;gap:10px;position:sticky;top:108px;height:calc(100vh - 108px - 60px);align-self:start}
 
-.content-pane h1{font-size:26px;font-weight:500;color:var(--text-strong);line-height:1.3;margin-bottom:18px}
-.content-pane h2{font-size:20px;font-weight:500;color:var(--text-strong);margin:36px 0 14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+/* === Chapter hero (h1) — clearly the top of the document === */
+.chapter-hero{margin:0 0 32px;padding:0 0 24px;border-bottom:1px solid var(--border);position:relative}
+.chapter-hero::after{content:'';position:absolute;left:0;bottom:-1px;width:80px;height:3px;background:var(--accent);border-radius:99px}
+.chapter-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:0.18em;color:var(--muted);margin-bottom:14px;text-transform:uppercase}
+.chapter-eyebrow .chip{background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent-text);padding:3px 10px;border-radius:99px;font-weight:600;letter-spacing:0.1em}
+.chapter-eyebrow .sep{color:var(--muted-dim)}
+.content-pane h1{font-size:36px;font-weight:500;color:var(--text-strong);line-height:1.2;margin:0;letter-spacing:-0.01em}
+.chapter-subtitle{margin-top:12px;font-size:14px;color:var(--muted);line-height:1.7;max-width:680px}
+
+/* === Section dividers (h2) — § NN · ENGLISH LABEL eyebrow + larger title + accent line ===
+   Strong visual rest point every time a new section begins. */
+.content-pane h2{
+  font-size:24px;font-weight:500;color:var(--text-strong);
+  line-height:1.35;margin:64px 0 20px;padding:0;border:0;
+  position:relative;letter-spacing:-0.005em;
+}
+.content-pane h2::before{
+  content:'§ ' attr(data-num) '  ·  ' attr(data-label);
+  display:block;
+  font-family:var(--font-mono);font-size:13px;font-weight:600;
+  letter-spacing:0.16em;color:var(--accent);
+  margin-bottom:10px;text-transform:uppercase;
+}
+.content-pane h2::after{
+  content:'';display:block;margin-top:16px;height:1px;
+  background:linear-gradient(90deg,var(--accent) 0%,var(--accent-border) 8%,var(--border) 40%,transparent 100%);
+}
+/* The very first h2 has no eyebrow (immediately follows the hero) — kept simple */
+.content-pane h2:not([data-num])::before{display:none}
+
 .content-pane h3{font-size:16px;font-weight:500;color:var(--text-strong);margin:24px 0 10px}
 .content-pane h4{font-size:14px;font-weight:500;color:var(--text-strong);margin:18px 0 8px}
 .content-pane p{margin:10px 0;line-height:1.8}
@@ -172,6 +240,28 @@ body{padding-bottom:64px}
 .connect-card-meta{font-size:11.5px;color:var(--muted);margin-top:8px;font-family:var(--font-mono);letter-spacing:0.02em}
 .connect-pending{font-size:11.5px;color:var(--amber-text);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:99px;padding:3px 10px;font-family:var(--font-mono);display:inline-block;margin-top:8px}
 
+/* Inline "after connection" flow strip — demoted from card to compact row */
+.connect-flow{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  padding:9px 12px;margin-top:2px;
+  font-family:var(--font-mono);font-size:11.5px;color:var(--muted);
+  border:1px dashed var(--border);border-radius:8px;
+  background:rgba(22,27,34,0.5);
+}
+.connect-flow .flow-label{
+  color:var(--accent);font-weight:600;letter-spacing:0.14em;
+  text-transform:uppercase;font-size:10px;
+  padding-right:4px;border-right:1px solid var(--border);margin-right:4px;
+}
+.connect-flow .flow-step{display:inline-flex;align-items:center;gap:5px;color:var(--text)}
+.connect-flow .flow-num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:17px;height:17px;border-radius:50%;
+  background:var(--bg);border:1px solid var(--accent-border);
+  color:var(--accent);font-size:10px;font-weight:600;
+}
+.connect-flow .flow-arr{color:var(--muted-dim);font-weight:600}
+
 .checklist{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px}
 .checklist.prominent{background:var(--accent-bg);border-color:var(--accent-border)}
 .checklist-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -198,6 +288,90 @@ body{padding-bottom:64px}
 .modal-close:hover{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-border)}
 
 .step-num{color:var(--accent);font-weight:600;margin-right:6px;font-size:18px;line-height:1;vertical-align:-1px}
+
+/* === Step section — each numbered exercise step is a clearly-bounded "phase" card ===
+   Pattern: lifted bg (--bg3, 2 steps from page bg) + 3px accent left-stripe (system signature)
+            + full-width colored header bar with STEP NN / 09 eyebrow                       */
+.step-section{
+  position:relative;
+  margin:20px 0;
+  padding:48px 22px 20px;
+  background:var(--bg3);
+  border:1px solid var(--accent-border);
+  border-left:3px solid var(--accent);
+  border-radius:0 10px 10px 0;
+  transition:border-color 0.2s ease,transform 0.2s ease;
+}
+.step-section + .step-section{margin-top:18px}
+.step-section::before{
+  content:'STEP ' attr(data-step) ' / 09';
+  position:absolute;
+  top:0;left:0;right:0;
+  padding:8px 18px;
+  background:var(--accent-bg);
+  border-bottom:1px solid var(--accent-border);
+  border-radius:0 7px 0 0;
+  font-family:var(--font-mono);
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.14em;
+  color:var(--accent-text);
+  text-transform:uppercase;
+  z-index:2;
+}
+/* small "tie" between consecutive steps so the eye follows the flow */
+.step-section:not(:last-of-type)::after{
+  content:'';
+  position:absolute;
+  left:-3px;
+  bottom:-19px;
+  width:3px;
+  height:20px;
+  background:var(--accent);
+  opacity:0.4;
+  z-index:1;
+}
+.step-section > h3.step-title{
+  margin:0 0 12px;
+  padding:0;
+  border:0;
+  font-size:17px;
+  color:var(--text-strong);
+  font-weight:500;
+  line-height:1.45;
+}
+.step-section > h3.step-title code{font-size:14px}
+.step-section > *:last-child{margin-bottom:0}
+.step-section > p{margin:10px 0}
+.step-section .codeblock{margin:12px 0;background:#0a0e14}
+.step-section .callout-key,
+.step-section .callout-amber,
+.step-section .callout-coral,
+.step-section .callout-purple{margin:12px 0}
+
+/* Start step — green "START" header */
+.step-section.step-start{border-left-color:var(--green);border-color:var(--green-border)}
+.step-section.step-start::before{
+  content:'START · 接続';
+  background:var(--green-bg);
+  border-bottom-color:var(--green-border);
+  color:var(--green-text);
+}
+.step-section.step-start:not(:last-of-type)::after{background:var(--green)}
+
+/* Reward (final) step — purple "GOAL" header */
+.step-section.step-reward{border-left-color:var(--purple);border-color:var(--purple-border)}
+.step-section.step-reward::before{
+  content:'GOAL · STEP ' attr(data-step) ' / 09';
+  background:var(--purple-bg);
+  border-bottom-color:var(--purple-border);
+  color:var(--purple-text);
+}
+
+@media (max-width:600px){
+  .step-section{padding:42px 14px 16px}
+  .step-section::before{padding:7px 12px;font-size:10px}
+}
 
 .obj-intro{font-size:14.5px;color:var(--text);font-weight:400;line-height:1.85;margin:14px 0 6px}
 .obj-intro strong{color:var(--text-strong);font-weight:600}
@@ -295,6 +469,13 @@ body{padding-bottom:64px}
       <span class="progress-text" id="progressText">0 / 4</span>
     </div>
     <span class="meta-time">⏱ 約 30 分</span>
+    <div class="section-indicator" id="sectionIndicator" aria-live="polite">
+      <span class="si-num">§ 01</span>
+      <span class="si-label">Overview</span>
+      <span class="si-sep">·</span>
+      <span class="si-title">「chmod +x の正体」を解剖する</span>
+      <span class="si-progress">1 / 7</span>
+    </div>
     <label class="meta-progress">
       <input type="checkbox" id="chapter-complete">
       <span>完了マーク</span>
@@ -308,7 +489,11 @@ body{padding-bottom:64px}
   <!-- ── Content pane ── -->
   <main class="content-pane">
 
-    <h1>ユーザとパーミッション</h1>
+    <div class="chapter-hero">
+      <div class="chapter-eyebrow"><span class="chip">Part 1</span><span>Chapter 07</span><span class="sep">/</span><span>Linux 基礎</span></div>
+      <h1>ユーザとパーミッション</h1>
+      <p class="chapter-subtitle"><code>chmod</code> の数字、<code>rwx</code> の 9 文字、グループ追加 ── Linux のすべてのファイルに刻まれた「誰が何をできるか」を読み解き、自分の手で書き換えられるようになります。</p>
+    </div>
 
     <table class="meta-table">
       <tr><th>所要時間</th><td>約 30 分</td></tr>
@@ -317,7 +502,7 @@ body{padding-bottom:64px}
       <tr><th>関連章</th><td>前: Chapter 6「環境変数とシェルの仕組み」/ 後: Chapter 8「Part 1 修了演習」</td></tr>
     </table>
 
-    <h2>「<code>chmod +x</code> の正体」を解剖する</h2>
+    <h2 data-num="01" data-label="Overview">「<code>chmod +x</code> の正体」を解剖する</h2>
     <p>Chapter 6 の演習で、あなたはこんなコマンドを打ちました。</p>
     <div class="codeblock">
       <div class="codeblock-head"><span>bash</span></div>
@@ -338,7 +523,7 @@ body{padding-bottom:64px}
     ・「権限のないファイル」が出てきたとき、自分でグループを変えて解決できる<br>
     ・Part 3 以降の SSH 鍵 / nginx / PostgreSQL で出てくる「権限エラー」を恐れなくなる</div>
 
-    <h2>この章を終えるとできること</h2>
+    <h2 data-num="02" data-label="Objectives">この章を終えるとできること</h2>
     <p class="obj-intro"><strong>パーミッションを扱う 4 動作</strong> を手に覚えます。</p>
 
     <div class="objective-grid">
@@ -389,7 +574,7 @@ body{padding-bottom:64px}
 
     <p class="obj-intro">この 4 動作が体になじむと、「<code>Permission denied</code>」がもう怖くなくなります。原因が即座に切り分けられて、自分で直せるからです。</p>
 
-    <h2>概念説明</h2>
+    <h2 data-num="03" data-label="Concepts">概念説明</h2>
 
     <h3>1. 「誰が」── ユーザとグループ</h3>
     <p>Linux では、すべてのプロセス・ファイルに <strong>「誰のものか」</strong> が紐づいています。これを管理する単位が <strong>ユーザ</strong> と <strong>グループ</strong> です。</p>
@@ -601,7 +786,7 @@ body{padding-bottom:64px}
     <p><strong>ファイル名は inode へのポインタにすぎません</strong>。<code>chmod</code> で権限を変えると、ファイルの中身ではなく <strong>inode が書き換わります</strong>（その証拠に <code>stat</code> の <strong>Change</strong> タイムスタンプが更新される）。</p>
     <p style="color:var(--muted);font-size:13px">※ ハードリンク / シンボリックリンクという「inode の使いまわし」の話は、Part 3 のサーバ運用編で詳しく扱います。</p>
 
-    <h2>試してみよう：<code>hello</code> の権限を解剖して、グループ追加で世界を広げる</h2>
+    <h2 data-num="04" data-label="Hands-on">試してみよう：<code>hello</code> の権限を解剖して、グループ追加で世界を広げる</h2>
     <p>Chapter 6 で作った <code>~/bin/hello</code> を題材に、<strong>4 動作</strong> をすべて体験します。</p>
 
     <div class="fail-safe">
@@ -609,91 +794,104 @@ body{padding-bottom:64px}
       <p style="font-size:13px;line-height:1.7">触るのは <code>~/bin/hello</code> の権限と、<code>student</code> の所属グループだけ。すべて元に戻せる操作です。ステップ ⑦ の <code>usermod</code> は <strong>root 権限が必要</strong> なので、講師がこの操作を事前に済ませている場合は ⑧ から進めてください。</p>
     </div>
 
-    <h3>まず learner01 に入る</h3>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash · workstation01 から SSH</span>
-        <button class="copy-btn" data-copy="ssh student@learner01">📋 コピー → 右ターミナルで Ctrl+V</button>
+    <section class="step-section step-start" data-step="▶">
+      <h3 class="step-title">まず learner01 に入る</h3>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash · workstation01 から SSH</span>
+          <button class="copy-btn" data-copy="ssh student@learner01">📋 コピー → 右ターミナルで Ctrl+V</button>
+        </div>
+        <pre><span class="kw">ssh</span> student@learner01</pre>
       </div>
-      <pre><span class="kw">ssh</span> student@learner01</pre>
-    </div>
+    </section>
 
-    <h3><span class="step-num">①</span>誰が ── 自分のユーザとグループを確認</h3>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash</span>
-        <button class="copy-btn" data-copy="id&#10;groups">📋 コピー</button>
-      </div>
-      <pre><span class="kw">id</span>
+    <section class="step-section" data-step="1">
+      <h3 class="step-title">誰が ── 自分のユーザとグループを確認</h3>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash</span>
+          <button class="copy-btn" data-copy="id&#10;groups">📋 コピー</button>
+        </div>
+        <pre><span class="kw">id</span>
 <span class="comment"># → uid=1003(student) gid=1003(student) groups=1003(student)</span>
 
 <span class="kw">groups</span>
 <span class="comment"># → student</span></pre>
-    </div>
-    <p>主グループ = <code>student</code>、副グループ = なし。</p>
-
-    <h3><span class="step-num">②</span>読む ── <code>~/bin/hello</code> の権限を観察</h3>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash</span>
-        <button class="copy-btn" data-copy="ls -l ~/bin/hello">📋 コピー</button>
       </div>
-      <pre><span class="kw">ls</span> -l ~/bin/hello
+      <p>主グループ = <code>student</code>、副グループ = なし。</p>
+    </section>
+
+    <section class="step-section" data-step="2">
+      <h3 class="step-title">読む ── <code>~/bin/hello</code> の権限を観察</h3>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash</span>
+          <button class="copy-btn" data-copy="ls -l ~/bin/hello">📋 コピー</button>
+        </div>
+        <pre><span class="kw">ls</span> -l ~/bin/hello
 <span class="comment"># → </span><span class="perm">-rwxrwxr-x</span><span class="comment"> 1 student student 70  5月 16 09:35 /home/student/bin/hello</span></pre>
-    </div>
-    <p><strong>Chapter 6 の <code>chmod +x</code> で <code>x</code> が 3 箇所すべてに付いた</strong> のがここで確認できます。</p>
-
-    <h3><span class="step-num">③</span>inode を覗く ── 権限はどこに保存されているか</h3>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash</span>
-        <button class="copy-btn" data-copy="ls -li ~/bin/hello&#10;stat ~/bin/hello">📋 コピー</button>
       </div>
-      <pre><span class="kw">ls</span> -li ~/bin/hello
+      <p><strong>Chapter 6 の <code>chmod +x</code> で <code>x</code> が 3 箇所すべてに付いた</strong> のがここで確認できます。</p>
+    </section>
+
+    <section class="step-section" data-step="3">
+      <h3 class="step-title">inode を覗く ── 権限はどこに保存されているか</h3>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash</span>
+          <button class="copy-btn" data-copy="ls -li ~/bin/hello&#10;stat ~/bin/hello">📋 コピー</button>
+        </div>
+        <pre><span class="kw">ls</span> -li ~/bin/hello
 <span class="comment"># → </span><span class="var">396936</span><span class="comment"> -rwxrwxr-x 1 student student ...</span>
 
 <span class="kw">stat</span> ~/bin/hello
 <span class="comment"># Inode: 396936 / Access: (0775/-rwxrwxr-x) / Uid: 1003 / Gid: 1003</span></pre>
-    </div>
-    <p><strong>inode 番号 (例: 396936)</strong> はあなたの環境では別の数字になります。これがファイルの「身分証明書」です。</p>
-
-    <h3><span class="step-num">④</span>変える（数字方式）── <code>chmod 644</code> で実行権限を剥がす</h3>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash</span>
-        <button class="copy-btn" data-copy="chmod 644 ~/bin/hello&#10;ls -l ~/bin/hello&#10;~/bin/hello">📋 コピー</button>
       </div>
-      <pre><span class="kw">chmod</span> <span class="num">644</span> ~/bin/hello
+      <p><strong>inode 番号 (例: 396936)</strong> はあなたの環境では別の数字になります。これがファイルの「身分証明書」です。</p>
+    </section>
+
+    <section class="step-section" data-step="4">
+      <h3 class="step-title">変える（数字方式）── <code>chmod 644</code> で実行権限を剥がす</h3>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash</span>
+          <button class="copy-btn" data-copy="chmod 644 ~/bin/hello&#10;ls -l ~/bin/hello&#10;~/bin/hello">📋 コピー</button>
+        </div>
+        <pre><span class="kw">chmod</span> <span class="num">644</span> ~/bin/hello
 <span class="kw">ls</span> -l ~/bin/hello
 <span class="comment"># → </span><span class="perm-blocked">-rw-r--r--</span><span class="comment"> 1 student student ...</span>
 
 ~/bin/hello
 <span class="comment"># → bash: /home/student/bin/hello: 許可がありません</span></pre>
-    </div>
-    <p>実行権限がないと、シェルは「これは実行ファイルではない」と判断して拒否します。</p>
-
-    <h3><span class="step-num">⑤</span>変える（記号方式）── <code>chmod u+x</code> で自分だけ実行可能に</h3>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash</span>
-        <button class="copy-btn" data-copy="chmod u+x ~/bin/hello&#10;ls -l ~/bin/hello&#10;~/bin/hello">📋 コピー</button>
       </div>
-      <pre><span class="kw">chmod</span> u+x ~/bin/hello
+      <p>実行権限がないと、シェルは「これは実行ファイルではない」と判断して拒否します。</p>
+    </section>
+
+    <section class="step-section" data-step="5">
+      <h3 class="step-title">変える（記号方式）── <code>chmod u+x</code> で自分だけ実行可能に</h3>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash</span>
+          <button class="copy-btn" data-copy="chmod u+x ~/bin/hello&#10;ls -l ~/bin/hello&#10;~/bin/hello">📋 コピー</button>
+        </div>
+        <pre><span class="kw">chmod</span> u+x ~/bin/hello
 <span class="kw">ls</span> -l ~/bin/hello
 <span class="comment"># → </span><span class="perm">-rwxr--r--</span><span class="comment"> 1 student student ...</span>
 
 ~/bin/hello
 <span class="comment"># → こんにちは、student さん！ (from learner01)</span></pre>
-    </div>
-    <p><code>u+x</code> = user に x を足す。自分だけ実行できる状態になりました。</p>
-
-    <h3><span class="step-num">⑥</span>守る ── <code>chmod 600</code> で他人から完全ブロック</h3>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash</span>
-        <button class="copy-btn" data-copy="chmod 600 ~/bin/hello&#10;ls -l ~/bin/hello&#10;chmod 755 ~/bin/hello&#10;ls -l ~/bin/hello">📋 コピー</button>
       </div>
-      <pre><span class="kw">chmod</span> <span class="num">600</span> ~/bin/hello
+      <p><code>u+x</code> = user に x を足す。自分だけ実行できる状態になりました。</p>
+    </section>
+
+    <section class="step-section" data-step="6">
+      <h3 class="step-title">守る ── <code>chmod 600</code> で他人から完全ブロック</h3>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash</span>
+          <button class="copy-btn" data-copy="chmod 600 ~/bin/hello&#10;ls -l ~/bin/hello&#10;chmod 755 ~/bin/hello&#10;ls -l ~/bin/hello">📋 コピー</button>
+        </div>
+        <pre><span class="kw">chmod</span> <span class="num">600</span> ~/bin/hello
 <span class="kw">ls</span> -l ~/bin/hello
 <span class="comment"># → </span><span class="perm-blocked">-rw-------</span><span class="comment"> 1 student student ...</span>
 
@@ -701,58 +899,64 @@ body{padding-bottom:64px}
 <span class="kw">chmod</span> <span class="num">755</span> ~/bin/hello
 <span class="kw">ls</span> -l ~/bin/hello
 <span class="comment"># → </span><span class="perm">-rwxr-xr-x</span><span class="comment"> 1 student student ...</span></pre>
-    </div>
-
-    <h3><span class="step-num">⑦</span>グループの力 ── 副グループに追加して新しい世界を開く（要 sudo）</h3>
-    <div class="callout-amber">ここからは <strong>root 権限が必要</strong> な操作です。<code>workstation01</code> の <code>alice</code> 側で、sudo 可能なユーザーから実行します（演習環境では事前準備済みの場合あり）。</div>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash · sudo 可能なユーザで実行</span>
-        <button class="copy-btn" data-copy="sudo usermod -aG adm student&#10;grep '^adm:' /etc/group">📋 コピー</button>
       </div>
-      <pre><span class="kw">sudo</span> usermod -aG adm student
+    </section>
+
+    <section class="step-section" data-step="7">
+      <h3 class="step-title">グループの力 ── 副グループに追加して新しい世界を開く（要 sudo）</h3>
+      <div class="callout-amber">ここからは <strong>root 権限が必要</strong> な操作です。<code>workstation01</code> の <code>alice</code> 側で、sudo 可能なユーザーから実行します（演習環境では事前準備済みの場合あり）。</div>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash · sudo 可能なユーザで実行</span>
+          <button class="copy-btn" data-copy="sudo usermod -aG adm student&#10;grep '^adm:' /etc/group">📋 コピー</button>
+        </div>
+        <pre><span class="kw">sudo</span> usermod -aG adm student
 <span class="comment"># -a: 「追加 (append)」/ -G: 副グループ指定</span>
 <span class="comment"># -a を忘れると既存の副グループを上書きする大事故になる</span>
 
 <span class="kw">grep</span> '^adm:' /etc/group
 <span class="comment"># → adm:x:4:syslog,nk,student   ← student が追加された</span></pre>
-    </div>
-
-    <h3><span class="step-num">⑧</span>反映 ── 新セッションで効果を確認</h3>
-    <div class="callout-coral">
-      <span class="coral-badge">⚠ 要注意ポイント</span>
-      <p style="margin-top:6px">グループ追加は <strong>今開いているシェルには反映されません</strong>。プロセスのグループメンバーシップは、ログイン時に決まるからです。いったん <code>exit</code> して再ログインするか、<code>newgrp</code> で切り替えます。</p>
-    </div>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash</span>
-        <button class="copy-btn" data-copy="groups&#10;exit">📋 コピー</button>
       </div>
-      <pre><span class="comment"># 今のシェルでは</span>
+    </section>
+
+    <section class="step-section" data-step="8">
+      <h3 class="step-title">反映 ── 新セッションで効果を確認</h3>
+      <div class="callout-coral">
+        <span class="coral-badge">⚠ 要注意ポイント</span>
+        <p style="margin-top:6px">グループ追加は <strong>今開いているシェルには反映されません</strong>。プロセスのグループメンバーシップは、ログイン時に決まるからです。いったん <code>exit</code> して再ログインするか、<code>newgrp</code> で切り替えます。</p>
+      </div>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash</span>
+          <button class="copy-btn" data-copy="groups&#10;exit">📋 コピー</button>
+        </div>
+        <pre><span class="comment"># 今のシェルでは</span>
 <span class="kw">groups</span>
 <span class="comment"># → student            (まだ adm が見えない)</span>
 
 <span class="kw">exit</span></pre>
-    </div>
-    <p>再 SSH してから確認：</p>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash · 再 SSH 後</span>
-        <button class="copy-btn" data-copy="ssh student@learner01&#10;groups">📋 コピー</button>
       </div>
-      <pre><span class="kw">ssh</span> student@learner01
+      <p>再 SSH してから確認：</p>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash · 再 SSH 後</span>
+          <button class="copy-btn" data-copy="ssh student@learner01&#10;groups">📋 コピー</button>
+        </div>
+        <pre><span class="kw">ssh</span> student@learner01
 <span class="kw">groups</span>
 <span class="comment"># → student adm         ← 反映された</span></pre>
-    </div>
-
-    <h3><span class="step-num">⑨</span>ご褒美 ── 今まで読めなかったログが読めるようになる</h3>
-    <p><code>/var/log/auth.log</code>（認証ログ）は <strong><code>adm</code> グループのメンバーしか読めない</strong> ファイルです。</p>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash</span>
-        <button class="copy-btn" data-copy="ls -l /var/log/auth.log&#10;head -3 /var/log/auth.log">📋 コピー</button>
       </div>
-      <pre><span class="kw">ls</span> -l /var/log/auth.log
+    </section>
+
+    <section class="step-section step-reward" data-step="9">
+      <h3 class="step-title">ご褒美 ── 今まで読めなかったログが読めるようになる</h3>
+      <p><code>/var/log/auth.log</code>（認証ログ）は <strong><code>adm</code> グループのメンバーしか読めない</strong> ファイルです。</p>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash</span>
+          <button class="copy-btn" data-copy="ls -l /var/log/auth.log&#10;head -3 /var/log/auth.log">📋 コピー</button>
+        </div>
+        <pre><span class="kw">ls</span> -l /var/log/auth.log
 <span class="comment"># → -rw-r----- 1 syslog adm ...    ← group=adm, group権限=r--</span>
 
 <span class="comment"># 追加前（昔の自分）は:</span>
@@ -761,8 +965,9 @@ body{padding-bottom:64px}
 <span class="comment"># 追加後の今:</span>
 <span class="kw">head</span> -3 /var/log/auth.log
 <span class="comment"># → 2026-05-16T09:30:58 learner01 sshd[1148]: Server listening on 0.0.0.0 port 22</span></pre>
-    </div>
-    <div class="callout-key"><strong>「グループに入る」という行為で、ファイルへのアクセス権が広がった</strong> ── これがグループの実用例です。Part 3 以降のサーバ運用では、サービスごとに専用グループ（<code>adm</code> / <code>wheel</code> / <code>docker</code> / <code>www-data</code> 等）に追加する作業が頻繁に登場します。</div>
+      </div>
+      <div class="callout-key"><strong>「グループに入る」という行為で、ファイルへのアクセス権が広がった</strong> ── これがグループの実用例です。Part 3 以降のサーバ運用では、サービスごとに専用グループ（<code>adm</code> / <code>wheel</code> / <code>docker</code> / <code>www-data</code> 等）に追加する作業が頻繁に登場します。</div>
+    </section>
 
     <div class="fail-safe">
       <div class="fail-safe-title">🛟 失敗しても安全に戻せる方法</div>
@@ -776,7 +981,7 @@ body{padding-bottom:64px}
       </table>
     </div>
 
-    <h2>詰まったら</h2>
+    <h2 data-num="05" data-label="Troubleshooting">詰まったら</h2>
     <ul class="bullets" style="margin-bottom:14px">
       <li><strong>段階ヒント</strong>: 定番の詰まりポイントへの段階開示</li>
       <li><strong>AI に相談</strong>: Cloudflare Workers AI に自由質問できる相談窓口（v2 公開予定）</li>
@@ -865,7 +1070,7 @@ body{padding-bottom:64px}
       </div>
     </div>
 
-    <h2>修了確認</h2>
+    <h2 data-num="06" data-label="Checkpoint">修了確認</h2>
     <p>学んだことが身についたか、2 問だけ確認してみましょう。</p>
 
     <div class="quiz">
@@ -884,7 +1089,7 @@ body{padding-bottom:64px}
       <button class="quiz-btn" data-modal="quiz2">考えました → 解答を見る</button>
     </div>
 
-    <h2>次の章へ</h2>
+    <h2 data-num="07" data-label="What's next">次の章へ</h2>
     <p>次は <strong>Chapter 8「Part 1 修了演習」</strong> です。</p>
     <p>Chapter 1 〜 7 で習った内容（SSH / ファイル操作 / grep / vim / 環境変数 / 権限）を <strong>1 つのシナリオに統合</strong> して、実機サーバ上で総合演習を行います。Part 1 の卒業試験です。</p>
 
@@ -901,14 +1106,13 @@ body{padding-bottom:64px}
 
       <div class="connect-card option-a">
         <div class="connect-card-head">
-          <span class="connect-card-badge">Option A</span>
-          <span class="connect-card-title">🌐 ブラウザで開く（Guacamole）</span>
+          <span class="connect-card-title">ブラウザで開く（Guacamole）</span>
         </div>
         <div class="connect-card-desc">
           <strong>環境構築不要・すぐ開始</strong>できます。新しいタブでブラウザ内ターミナルが起動します。初回は <strong>メール OTP 認証</strong> 画面が出ます。
         </div>
         <a href="https://lab.infra-study.org/guacamole/" target="_blank" rel="noopener" class="connect-btn">
-          <span>🚀 別タブで Guacamole を開く</span>
+          <span>別タブで Guacamole を開く</span>
           <span class="arr">↗</span>
         </a>
         <div class="connect-card-meta">lab.infra-study.org / workstation01 経由</div>
@@ -916,8 +1120,7 @@ body{padding-bottom:64px}
 
       <div class="connect-card option-b">
         <div class="connect-card-head">
-          <span class="connect-card-badge">Option B</span>
-          <span class="connect-card-title">💻 手元 PC から SSH</span>
+          <span class="connect-card-title">手元 PC から SSH</span>
         </div>
         <div class="connect-card-desc">
           <strong>本物のサーバ管理者体験</strong>。Mac / Linux は標準の <code>ssh</code>、Windows は Teraterm / OpenSSH / PuTTY。<strong>SSH 鍵認証</strong>で接続します。
@@ -930,16 +1133,13 @@ body{padding-bottom:64px}
         <span class="connect-pending">⏳ Phase B 準備中（受講者鍵配布フロー設計中）</span>
       </div>
 
-      <div class="connect-card" style="border-left:3px solid var(--green)">
-        <div class="connect-card-head">
-          <span class="connect-card-badge" style="background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text)">手順</span>
-          <span class="connect-card-title">📋 接続後の流れ</span>
-        </div>
-        <div class="connect-card-desc" style="margin-bottom:0">
-          <strong>1.</strong> 上の A または B で <code>alice@workstation01:~$</code> に到達<br>
-          <strong>2.</strong> 踏み台から <code>ssh student@learner01</code> でジャンプ<br>
-          <strong>3.</strong> <code>student@learner01:~$</code> で演習開始
-        </div>
+      <div class="connect-flow">
+        <span class="flow-label">接続後</span>
+        <span class="flow-step"><span class="flow-num">1</span>alice@workstation01</span>
+        <span class="flow-arr">→</span>
+        <span class="flow-step"><span class="flow-num">2</span>ssh student@learner01</span>
+        <span class="flow-arr">→</span>
+        <span class="flow-step"><span class="flow-num">3</span>演習開始</span>
       </div>
 
     </div>
@@ -1065,6 +1265,71 @@ function updateProgress(){
 checklistItems.forEach(c=>{
   c.addEventListener('change',()=>{c.closest('.checklist-item').classList.toggle('done',c.checked);updateProgress();});
 });
+
+// === Section indicator — tracks which §NN section the user is currently in ===
+(function(){
+  const indicator = document.getElementById('sectionIndicator');
+  if(!indicator) return;
+  const sections = Array.from(document.querySelectorAll('.content-pane h2[data-num]'));
+  if(!sections.length) return;
+  const total = sections.length;
+  const siNum = indicator.querySelector('.si-num');
+  const siLabel = indicator.querySelector('.si-label');
+  const siTitle = indicator.querySelector('.si-title');
+  const siProgress = indicator.querySelector('.si-progress');
+
+  // Compute pure title text (strip ::before pseudo, which is not in textContent anyway)
+  const data = sections.map((h2,i)=>({
+    el:h2,
+    num:h2.dataset.num,
+    label:h2.dataset.label,
+    title:h2.textContent.trim(),
+    idx:i+1
+  }));
+
+  let lastIdx = -1;
+  function update(){
+    // Sticky threshold — anything whose top has scrolled above this is "passed"
+    const threshold = 108 + 24; // header + meta + small buffer
+    let active = -1;
+    for(let i=0;i<data.length;i++){
+      const r = data[i].el.getBoundingClientRect();
+      if(r.top <= threshold){ active = i; } else { break; }
+    }
+    if(active === -1){
+      // Above the first section — show §01 as "upcoming"
+      if(lastIdx !== -1){
+        const d = data[0];
+        siNum.textContent = '§ ' + d.num;
+        siLabel.textContent = d.label;
+        siTitle.textContent = d.title;
+        if(siProgress) siProgress.textContent = d.idx + ' / ' + total;
+        lastIdx = -1;
+      }
+      return;
+    }
+    if(active !== lastIdx){
+      const d = data[active];
+      siNum.textContent = '§ ' + d.num;
+      siLabel.textContent = d.label;
+      siTitle.textContent = d.title;
+      if(siProgress) siProgress.textContent = d.idx + ' / ' + total;
+      lastIdx = active;
+    }
+    if(!indicator.classList.contains('active')){
+      indicator.classList.add('active');
+    }
+  }
+  let ticking = false;
+  window.addEventListener('scroll',()=>{
+    if(!ticking){
+      requestAnimationFrame(()=>{update();ticking=false;});
+      ticking=true;
+    }
+  },{passive:true});
+  window.addEventListener('resize',update,{passive:true});
+  update();
+})();
 </script>
 
 </body>
