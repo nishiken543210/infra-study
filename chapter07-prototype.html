@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 7: ユーザとパーミッション — infra-study.org</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+:root{
+  --bg:#0d1117; --bg2:#161b22; --bg3:#1c2230; --border:#2a3441;
+  --text:#e2eaf3; --text-strong:#e6edf3; --muted:#9aacbc; --muted-dim:#3a4a5c;
+  --accent:#58a6ff; --green:#3fb950; --amber:#d29922; --purple:#bc8cff; --coral:#f78166; --red:#f85149;
+  --accent-bg:#1c2d3d; --accent-bg-hi:#1e3550; --accent-border:#2a4060; --accent-text:#8ecbff;
+  --green-bg:#1c2616; --green-border:#2a4020; --green-text:#6fd672;
+  --amber-bg:#1c1a0d; --amber-border:#3a3010; --amber-text:#d4a236;
+  --purple-bg:#1c1830; --purple-border:#3a2860; --purple-text:#c4b5fd;
+  --coral-bg:#1c0e0a; --coral-border:#3a1a10; --coral-text:#f9826c;
+  --font-sans:'Noto Sans JP',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-weight:300;font-size:14px;line-height:1.7}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+strong{color:var(--text-strong);font-weight:500}
+code{font-family:var(--font-mono);font-size:12px;background:var(--bg);border:1px solid var(--border);padding:1px 5px;border-radius:4px;color:var(--purple)}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+ul{list-style:none}
+
+.site-header{position:sticky;top:0;z-index:50;background:rgba(13,17,23,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
+.header-inner{max-width:min(96vw,1800px);margin:0 auto;height:60px;padding:0 24px;display:flex;align-items:center;gap:32px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{width:28px;height:28px;border-radius:6px;background:var(--accent-bg);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:600;color:var(--accent);font-size:13px}
+.brand-text{display:flex;flex-direction:column;line-height:1.15}
+.brand-name{font-size:13px;color:var(--text-strong);font-weight:500}
+.brand-domain{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+.crumb{font-size:13px;color:var(--muted)}
+.crumb .sep{color:var(--muted-dim);margin:0 6px}
+.crumb .now{color:var(--text-strong)}
+.badge-free{display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--green-text);background:var(--green-bg);border:1px solid var(--green-border);padding:2px 8px;border-radius:99px;margin-right:8px}
+.nav-toc{margin-left:auto;font-size:13px;padding:8px 14px;border-radius:6px;background:transparent;border:1px solid var(--border);color:var(--muted);font-weight:400;display:inline-flex;align-items:center;gap:6px}
+.nav-toc:hover{background:var(--bg2);color:var(--text-strong);border-color:var(--accent-border)}
+.nav-user{margin-left:14px;font-size:12px;color:var(--muted);font-family:var(--font-mono);display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:99px;background:var(--bg2);border:1px solid var(--border)}
+.nav-user .avatar{width:18px;height:18px;border-radius:50%;background:var(--accent);color:var(--bg);font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:600}
+
+.meta-bar{position:sticky;top:60px;z-index:49;border-bottom:1px solid var(--border);background:rgba(22,27,34,0.92);backdrop-filter:blur(8px)}
+.meta-inner{max-width:min(96vw,1800px);margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:18px;font-size:13px}
+.progress{display:flex;align-items:center;gap:12px;min-width:280px}
+.progress-label{font-family:var(--font-mono);font-size:13px;color:var(--accent);letter-spacing:0.04em;font-weight:600;white-space:nowrap}
+.progress-bar{flex:1;height:6px;background:var(--bg3);border-radius:99px;overflow:hidden;border:1px solid var(--border);min-width:120px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--green) 0%,var(--accent) 100%);border-radius:99px;transition:width 0.3s ease}
+.progress-text{font-family:var(--font-mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.meta-time{color:var(--muted);font-size:13px}
+.meta-progress{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--muted)}
+.meta-progress input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent)}
+
+.pane-wrap{max-width:min(96vw,1800px);margin:0 auto;display:grid;grid-template-columns:60% 40%;min-height:calc(100vh - 60px - 48px)}
+.content-pane{padding:32px 28px 40px;border-right:1px solid var(--border);overflow-y:auto}
+.terminal-pane{background:var(--bg2);padding:12px 14px;display:flex;flex-direction:column;gap:10px;position:sticky;top:108px;height:calc(100vh - 108px - 60px);align-self:start}
+
+.content-pane h1{font-size:26px;font-weight:500;color:var(--text-strong);line-height:1.3;margin-bottom:18px}
+.content-pane h2{font-size:20px;font-weight:500;color:var(--text-strong);margin:36px 0 14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.content-pane h3{font-size:16px;font-weight:500;color:var(--text-strong);margin:24px 0 10px}
+.content-pane h4{font-size:14px;font-weight:500;color:var(--text-strong);margin:18px 0 8px}
+.content-pane p{margin:10px 0;line-height:1.8}
+.content-pane ul.bullets{padding-left:0;margin:10px 0}
+.content-pane ul.bullets li{padding-left:18px;position:relative;margin:6px 0;line-height:1.8}
+.content-pane ul.bullets li::before{content:'▸';position:absolute;left:0;color:var(--accent)}
+
+.callout-key{margin:18px 0;padding:12px 16px;background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;color:var(--text-strong)}
+.callout-amber{margin:18px 0;padding:12px 16px;background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;color:var(--text-strong)}
+.callout-coral{margin:18px 0;padding:14px 18px;background:var(--coral-bg);border:1px solid var(--coral-border);border-radius:8px;color:var(--text-strong)}
+.callout-coral .coral-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--coral-text);background:rgba(247,129,102,0.12);padding:3px 10px;border-radius:99px;border:1px solid var(--coral-border);margin-bottom:8px}
+.callout-purple{margin:18px 0;padding:14px 18px;background:var(--purple-bg);border-left:3px solid var(--purple);border-radius:0 8px 8px 0;color:var(--text-strong)}
+
+table.meta-table{width:100%;border-collapse:collapse;margin:14px 0;background:var(--bg2);border-radius:8px;overflow:hidden;font-size:13px}
+table.meta-table th,table.meta-table td{padding:8px 14px;text-align:left;border-bottom:1px solid var(--border)}
+table.meta-table th{color:var(--muted);font-weight:400;width:130px;background:var(--bg3)}
+table.meta-table tr:last-child th,table.meta-table tr:last-child td{border-bottom:none}
+
+table.op-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table.op-table th,table.op-table td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+table.op-table th{color:var(--muted);font-weight:500;background:var(--bg2)}
+table.op-table tr:last-child td{border-bottom:none}
+
+table.dir-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table.dir-table th,table.dir-table td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+table.dir-table th{color:var(--muted);font-weight:500;background:var(--bg2)}
+table.dir-table td:first-child code{font-size:13px}
+table.dir-table tr:last-child td{border-bottom:none}
+
+.codeblock{position:relative;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin:14px 0;overflow:hidden}
+.codeblock-head{background:var(--bg3);padding:6px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.codeblock pre{padding:14px 16px;font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--text);overflow-x:auto}
+.codeblock pre .comment{color:var(--muted)}
+.codeblock pre .prompt{color:var(--green)}
+.codeblock pre .kw{color:var(--purple)}
+.codeblock pre .var{color:var(--accent);font-weight:600}
+.codeblock pre .perm{color:var(--green-text);font-weight:600}
+.codeblock pre .num{color:var(--amber-text);font-weight:600}
+.copy-btn{font-family:var(--font-mono);font-size:11px;color:var(--accent);padding:3px 10px;border-radius:4px;border:1px solid var(--accent-border);background:var(--accent-bg)}
+.copy-btn:hover{background:var(--accent-bg-hi)}
+.copy-btn.copied{color:var(--green);border-color:var(--green-border);background:var(--green-bg)}
+
+.hint{margin:8px 0;border:1px solid var(--border);border-radius:8px;background:var(--bg2);overflow:hidden}
+.hint summary{cursor:pointer;padding:10px 14px;list-style:none;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-strong)}
+.hint summary::-webkit-details-marker{display:none}
+.hint summary::before{content:'▸';color:var(--accent);transition:transform 0.15s}
+.hint[open] summary::before{transform:rotate(90deg)}
+.hint .hint-body{padding:0 14px 14px 32px;color:var(--text);line-height:1.8;font-size:13px;border-top:1px solid var(--border);padding-top:12px;margin-top:0}
+.hint.stage1 summary::after{content:'1段';margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--accent);background:var(--accent-bg);padding:2px 8px;border-radius:99px}
+.hint.stage2 summary::after{content:'2段';margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--purple);background:var(--purple-bg);padding:2px 8px;border-radius:99px}
+.hint.answer summary::after{content:'答え';margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--green);background:var(--green-bg);padding:2px 8px;border-radius:99px}
+
+.fail-safe{margin:18px 0;padding:14px 18px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px}
+.fail-safe-title{color:var(--green-text);font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+
+.ai-chat-mock{margin:14px 0 22px;border:1px dashed var(--purple-border);border-radius:10px;background:var(--purple-bg);overflow:hidden}
+.ai-chat-head{padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--purple-border);background:rgba(28,24,48,0.5)}
+.ai-badge{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--purple-text);padding:3px 8px;border-radius:99px;background:rgba(188,140,255,0.15);border:1px solid var(--purple-border)}
+.ai-chat-title{font-size:13px;color:var(--text-strong);font-weight:500}
+.ai-chat-body{padding:14px 16px;font-size:13px;line-height:1.7;color:var(--muted)}
+.ai-chat-body p{margin:0 0 12px;color:var(--text)}
+.ai-chat-input-mock{display:flex;gap:8px;margin:8px 0 6px}
+.ai-chat-input-mock input{flex:1;padding:8px 12px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--muted-dim);font-family:var(--font-sans);font-size:13px}
+.ai-chat-input-mock input:disabled{cursor:not-allowed}
+.ai-send-btn{padding:8px 14px;border-radius:6px;background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text);font-size:12px;cursor:not-allowed;opacity:0.6}
+.ai-chat-meta{font-size:11px;color:var(--muted-dim);font-family:var(--font-mono)}
+
+.quiz{margin:18px 0;padding:16px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:10px}
+.quiz-title{font-size:13px;color:var(--accent);margin-bottom:6px;font-family:var(--font-mono);letter-spacing:0.04em}
+.quiz-q{font-size:14px;color:var(--text-strong);margin-bottom:10px;line-height:1.7}
+.quiz-btn{margin-top:10px;padding:8px 16px;border-radius:6px;background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent);font-size:13px;font-weight:500}
+.quiz-btn:hover{background:var(--accent-bg-hi)}
+
+.chapter-footer{position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(22,27,34,0.96);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px}
+body{padding-bottom:64px}
+.foot-btn{font-size:13px;padding:8px 16px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text)}
+.foot-btn:hover{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-border)}
+.foot-btn.complete{margin:0 auto;background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);font-weight:500}
+
+.term-head{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-family:var(--font-mono);flex-wrap:wrap}
+.term-head .label{color:var(--text-strong);font-size:13px}
+.term-head .server-status{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-family:var(--font-mono);padding:3px 9px;border-radius:99px;background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber-text)}
+.term-head .server-status .status-dot{width:6px;height:6px;border-radius:50%;background:var(--amber)}
+.term-head .server-status.up{background:var(--green-bg);border-color:var(--green-border);color:var(--green-text)}
+.term-head .server-status.up .status-dot{background:var(--green)}
+
+/* connect cards (D-017) */
+.connect-stack{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0}
+.connect-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;transition:border-color 0.2s ease}
+.connect-card:hover{border-color:var(--accent-border)}
+.connect-card.option-a{border-left:3px solid var(--accent)}
+.connect-card.option-b{border-left:3px solid var(--purple)}
+.connect-card-head{display:flex;align-items:center;gap:9px;margin-bottom:10px;flex-wrap:wrap}
+.connect-card-badge{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.06em;padding:3px 9px;border-radius:99px;text-transform:uppercase}
+.connect-card.option-a .connect-card-badge{background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent)}
+.connect-card.option-b .connect-card-badge{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text)}
+.connect-card-title{font-size:15px;color:var(--text-strong);font-weight:500}
+.connect-card-desc{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px}
+.connect-card-desc strong{color:var(--text-strong);font-weight:600}
+.connect-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:11px 16px;border-radius:8px;font-size:13.5px;font-weight:500;font-family:var(--font-sans);cursor:pointer;text-decoration:none;transition:background 0.15s}
+.connect-btn .arr{font-family:var(--font-mono);opacity:0.7}
+.connect-card.option-a .connect-btn{background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent-text)}
+.connect-card.option-a .connect-btn:hover{background:var(--accent-bg-hi);text-decoration:none}
+.connect-card.option-b .connect-btn{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text)}
+.connect-card.option-b .connect-btn:hover{background:rgba(188,140,255,0.18);text-decoration:none}
+.connect-ssh-cmd{margin-top:10px;background:#090d13;border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:var(--font-mono);font-size:12.5px;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.connect-ssh-cmd code{background:transparent;border:0;padding:0;color:var(--green-text);font-size:12.5px;word-break:break-all}
+.connect-ssh-cmd .mini-copy{font-family:var(--font-mono);font-size:11px;color:var(--accent);padding:4px 9px;border-radius:4px;border:1px solid var(--accent-border);background:var(--accent-bg);cursor:pointer;flex-shrink:0}
+.connect-ssh-cmd .mini-copy.copied{color:var(--green-text);border-color:var(--green-border);background:var(--green-bg)}
+.connect-card-meta{font-size:11.5px;color:var(--muted);margin-top:8px;font-family:var(--font-mono);letter-spacing:0.02em}
+.connect-pending{font-size:11.5px;color:var(--amber-text);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:99px;padding:3px 10px;font-family:var(--font-mono);display:inline-block;margin-top:8px}
+
+.checklist{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px}
+.checklist.prominent{background:var(--accent-bg);border-color:var(--accent-border)}
+.checklist-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.checklist-title{font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;font-family:var(--font-mono)}
+.checklist-progress{font-family:var(--font-mono);font-size:12px;color:var(--accent);font-weight:600}
+.checklist-progress.done{color:var(--green)}
+.checklist-item{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12.5px;color:var(--text);line-height:1.5}
+.checklist-item input{accent-color:var(--green)}
+.checklist-item.done{color:var(--muted);text-decoration:line-through}
+
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)}
+.modal-backdrop.open{display:flex}
+.modal{max-width:680px;width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+.modal-title{font-size:18px;font-weight:500;color:var(--text-strong);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.modal-title::before{content:'✓';color:var(--green);font-family:var(--font-mono)}
+.modal-body{font-size:13px;line-height:1.8;color:var(--text)}
+.modal-body ul{list-style:none;padding:0;margin:10px 0}
+.modal-body ul li{padding:4px 0 4px 16px;position:relative}
+.modal-body ul li::before{content:'•';position:absolute;left:0;color:var(--accent)}
+.modal-body table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+.modal-body table th,.modal-body table td{padding:7px 10px;border-bottom:1px solid var(--border);text-align:left}
+.modal-body table th{color:var(--muted);font-weight:500;background:var(--bg3)}
+.modal-close{margin-top:18px;padding:8px 18px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:13px;cursor:pointer}
+.modal-close:hover{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-border)}
+
+.step-num{color:var(--accent);font-weight:600;margin-right:6px;font-size:18px;line-height:1;vertical-align:-1px}
+
+.obj-intro{font-size:14.5px;color:var(--text);font-weight:400;line-height:1.85;margin:14px 0 6px}
+.obj-intro strong{color:var(--text-strong);font-weight:600}
+.objective-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0 6px;position:relative}
+.obj-card{position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg3) 100%);border:1px solid var(--border);border-radius:14px;padding:20px 14px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:11px;transition:transform 0.2s ease,border-color 0.2s ease,box-shadow 0.2s ease}
+.obj-card:hover{border-color:var(--accent-border);transform:translateY(-2px);box-shadow:0 6px 24px rgba(88,166,255,0.08)}
+.obj-icon{width:100%;min-height:84px;color:var(--text);background:var(--bg);border:1px solid var(--accent-border);border-radius:8px;padding:9px 11px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:4px;font-family:var(--font-mono);font-size:11.5px;line-height:1.5;letter-spacing:0;text-align:left;overflow:hidden;transition:border-color 0.2s ease,background 0.2s ease;position:relative}
+.obj-icon::before{content:'';position:absolute;top:0;left:0;right:0;height:14px;background:linear-gradient(180deg,var(--bg3) 0%,transparent 100%);opacity:0.55;pointer-events:none}
+.obj-icon .op-line{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.obj-icon .op-prompt{color:var(--green);font-weight:600}
+.obj-icon .op-cmd{color:var(--purple);font-weight:600}
+.obj-icon .op-var{color:var(--accent);font-weight:600}
+.obj-icon .op-eq{color:var(--text);opacity:0.7}
+.obj-icon .op-value{color:var(--green-text)}
+.obj-icon .op-hint{color:var(--muted);font-size:10px;letter-spacing:0.04em}
+.obj-icon .op-arrow{color:var(--accent);font-weight:600;font-size:13px}
+.obj-icon .op-file{color:var(--text-strong)}
+.obj-icon .op-perm{color:var(--green-text);font-weight:600;letter-spacing:0.5px}
+.obj-icon .op-perm-blocked{color:var(--coral-text);font-weight:600;letter-spacing:0.5px}
+.obj-icon .op-num{color:var(--amber-text);font-weight:600}
+.obj-card:hover .obj-icon{border-color:var(--accent);background:#0a0f16}
+.obj-verb{font-size:19px;color:var(--text-strong);font-weight:500;letter-spacing:0.08em;margin:0;line-height:1.2}
+.obj-desc{font-size:13.5px;color:var(--text);font-weight:400;line-height:1.65;margin:0;min-height:46px;display:flex;align-items:center;justify-content:center}
+.obj-cmds{margin-top:auto;font-family:var(--font-mono);font-size:13.5px;font-weight:600;letter-spacing:0.08em;color:var(--text-strong);background:var(--accent-bg-hi);border:1px solid var(--accent);border-radius:99px;padding:7px 16px;white-space:nowrap}
+.obj-card:not(:last-child)::after{content:'';position:absolute;right:-10px;top:50%;width:10px;height:10px;transform:translateY(-50%) rotate(45deg);border-top:2px solid var(--accent);border-right:2px solid var(--accent);z-index:2}
+
+/* permission decoder (-rwxr-xr-- 分解図) */
+.perm-decoder{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:18px 16px;margin:18px 0;font-family:var(--font-mono)}
+.perm-decoder-string{font-size:32px;letter-spacing:8px;color:var(--text-strong);text-align:center;font-weight:600;margin-bottom:14px}
+.perm-decoder-string .pd-type{color:var(--muted)}
+.perm-decoder-string .pd-user{color:var(--accent)}
+.perm-decoder-string .pd-group{color:var(--purple-text)}
+.perm-decoder-string .pd-other{color:var(--green-text)}
+.perm-decoder-arrows{display:grid;grid-template-columns:1fr 3fr 3fr 3fr;gap:6px;font-size:11px;color:var(--muted);text-align:center;margin-bottom:6px}
+.perm-decoder-labels{display:grid;grid-template-columns:1fr 3fr 3fr 3fr;gap:6px;font-size:12px;text-align:center}
+.perm-decoder-labels > div{padding:6px 4px;border-radius:6px;border:1px solid var(--border);font-family:var(--font-sans);font-weight:500}
+.perm-decoder-labels .pdl-type{color:var(--muted)}
+.perm-decoder-labels .pdl-user{color:var(--accent);background:var(--accent-bg);border-color:var(--accent-border)}
+.perm-decoder-labels .pdl-group{color:var(--purple-text);background:var(--purple-bg);border-color:var(--purple-border)}
+.perm-decoder-labels .pdl-other{color:var(--green-text);background:var(--green-bg);border-color:var(--green-border)}
+
+/* numeric chmod calculator */
+.chmod-calc{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin:14px 0;font-family:var(--font-mono);font-size:13px}
+.chmod-calc-row{display:grid;grid-template-columns:80px 1fr 1fr 1fr 60px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border)}
+.chmod-calc-row:last-child{border-bottom:none;margin-top:6px;padding-top:10px;border-top:1px solid var(--accent-border)}
+.chmod-calc-row .ccl{color:var(--muted);font-size:12px}
+.chmod-calc-row .ccc{text-align:center;color:var(--text-strong)}
+.chmod-calc-row .ccc.r{color:var(--accent)}
+.chmod-calc-row .ccc.w{color:var(--purple-text)}
+.chmod-calc-row .ccc.x{color:var(--green-text)}
+.chmod-calc-row .ccc.off{color:var(--muted-dim)}
+.chmod-calc-row .cct{color:var(--amber-text);font-weight:600;text-align:right}
+
+@media (max-width:1100px){
+  .objective-grid{grid-template-columns:repeat(2,1fr);gap:14px 18px}
+  .obj-card:nth-child(2)::after{display:none}
+  .pane-wrap{grid-template-columns:1fr}
+  .content-pane{border-right:none}
+  .terminal-pane{position:static;height:auto;min-height:340px;border-top:1px solid var(--border)}
+  .perm-decoder-string{font-size:22px;letter-spacing:4px}
+}
+@media (max-width:600px){
+  .objective-grid{grid-template-columns:1fr}
+  .obj-card::after{display:none}
+  .perm-decoder-string{font-size:18px;letter-spacing:2px}
+}
+</style>
+</head>
+<body>
+
+<!-- ─── Header ─── -->
+<header class="site-header">
+  <div class="header-inner">
+    <a href="#" class="brand">
+      <div class="brand-mark">i:</div>
+      <div class="brand-text">
+        <span class="brand-name">infra-study</span>
+        <span class="brand-domain">.org</span>
+      </div>
+    </a>
+    <nav class="crumb">
+      <span class="badge-free" title="無料体験版">FREE</span><span>Part 1</span><span class="sep">/</span><span>Ch.7</span><span class="sep">·</span><span class="now">ユーザとパーミッション</span>
+    </nav>
+    <a href="#" class="nav-toc">← Part 1 目次</a>
+    <span class="nav-user"><span class="avatar">a</span>alice</span>
+  </div>
+</header>
+
+<!-- ─── Chapter Meta Bar ─── -->
+<div class="meta-bar">
+  <div class="meta-inner">
+    <div class="progress">
+      <span class="progress-label">演習進捗</span>
+      <span class="progress-bar"><span class="progress-fill" id="progressFill" style="width:0%"></span></span>
+      <span class="progress-text" id="progressText">0 / 4</span>
+    </div>
+    <span class="meta-time">⏱ 約 30 分</span>
+    <label class="meta-progress">
+      <input type="checkbox" id="chapter-complete">
+      <span>完了マーク</span>
+    </label>
+  </div>
+</div>
+
+<!-- ─── 2-pane wrapper ─── -->
+<div class="pane-wrap">
+
+  <!-- ── Content pane ── -->
+  <main class="content-pane">
+
+    <h1>ユーザとパーミッション</h1>
+
+    <table class="meta-table">
+      <tr><th>所要時間</th><td>約 30 分</td></tr>
+      <tr><th>前提知識</th><td>Chapter 1-6（SSH / ファイル操作 / vim / 環境変数）</td></tr>
+      <tr><th>使用機材</th><td>踏み台 <code>workstation01</code> + 演習用サーバ <code>learner01</code></td></tr>
+      <tr><th>関連章</th><td>前: Chapter 6「環境変数とシェルの仕組み」/ 後: Chapter 8「Part 1 修了演習」</td></tr>
+    </table>
+
+    <h2>「<code>chmod +x</code> の正体」を解剖する</h2>
+    <p>Chapter 6 の演習で、あなたはこんなコマンドを打ちました。</p>
+    <div class="codeblock">
+      <div class="codeblock-head"><span>bash</span></div>
+      <pre><span class="kw">chmod</span> +x ~/bin/hello</pre>
+    </div>
+    <p>何気なく打ったこの 1 行が、Linux の <strong>権限システム</strong> の入口です。<code>+x</code> は「<strong>実行権限を付ける</strong>」という意味で、これを忘れると <code>hello</code> が実行ファイルとして認識されません。</p>
+    <p>では、この権限はどこに保存されていて、誰がどう読んでいるのでしょうか？</p>
+    <div class="codeblock">
+      <div class="codeblock-head"><span>bash</span></div>
+      <pre><span class="kw">ls</span> -l ~/bin/hello
+<span class="comment"># → </span><span class="perm">-rwxrwxr-x</span><span class="comment"> 1 student student 70  5月 16 09:35 /home/student/bin/hello</span></pre>
+    </div>
+    <p>左端の <code>-rwxrwxr-x</code> という呪文。これが「<strong>ファイルに付いた権限の表記</strong>」です。9 文字の中に <strong>「誰が」「何を」「できるか」</strong> がすべて詰まっています。</p>
+    <div class="callout-key">この章では、<strong>「誰が・何を・できるかを Linux はどう管理しているか」</strong> を読み解きます。これを掴むと：<br><br>
+    ・<code>-rwxr-xr--</code> をひと目で読めるようになる<br>
+    ・<code>chmod 755</code> と <code>chmod u+x</code> の <strong>2 つの書き方</strong> が両方使える<br>
+    ・「権限のないファイル」が出てきたとき、自分でグループを変えて解決できる<br>
+    ・Part 3 以降の SSH 鍵 / nginx / PostgreSQL で出てくる「権限エラー」を恐れなくなる</div>
+
+    <h2>この章を終えるとできること</h2>
+    <p class="obj-intro"><strong>権限の 4 動作</strong> を手に覚えます。</p>
+
+    <div class="objective-grid">
+      <div class="obj-card">
+        <div class="obj-icon" aria-label="id / groups で自分のユーザとグループを確認する">
+          <div class="op-line"><span class="op-prompt">$</span> <span class="op-cmd">id</span></div>
+          <div class="op-line"><span class="op-hint">uid=1003(student)</span></div>
+          <div class="op-line"><span class="op-hint">groups=1003(student)</span></div>
+        </div>
+        <div class="obj-verb">① 誰が</div>
+        <div class="obj-desc">id / groups で<br>自分の所属確認</div>
+        <span class="obj-cmds">id · groups</span>
+      </div>
+
+      <div class="obj-card">
+        <div class="obj-icon" aria-label="ls -l で権限を読む">
+          <div class="op-line"><span class="op-prompt">$</span> <span class="op-cmd">ls</span> <span class="op-var">-l</span></div>
+          <div class="op-line"><span class="op-perm">-rwxr-xr--</span></div>
+          <div class="op-line"><span class="op-hint">3×3 で分解</span></div>
+        </div>
+        <div class="obj-verb">② 読む</div>
+        <div class="obj-desc">ls -l で<br>9 文字を分解</div>
+        <span class="obj-cmds">ls -l</span>
+      </div>
+
+      <div class="obj-card">
+        <div class="obj-icon" aria-label="chmod で権限を変える">
+          <div class="op-line"><span class="op-prompt">$</span> <span class="op-cmd">chmod</span> <span class="op-num">755</span></div>
+          <div class="op-line"><span class="op-prompt">$</span> <span class="op-cmd">chmod</span> <span class="op-value">u+x</span></div>
+          <div class="op-line"><span class="op-hint">数字 / 記号 2 方式</span></div>
+        </div>
+        <div class="obj-verb">③ 変える</div>
+        <div class="obj-desc">chmod で権限を<br>付け外し</div>
+        <span class="obj-cmds">chmod</span>
+      </div>
+
+      <div class="obj-card">
+        <div class="obj-icon" aria-label="chmod 600 で他人から守る">
+          <div class="op-line"><span class="op-prompt">$</span> <span class="op-cmd">chmod</span> <span class="op-num">600</span></div>
+          <div class="op-line"><span class="op-perm-blocked">-rw-------</span></div>
+          <div class="op-line"><span class="op-hint">own のみ可</span></div>
+        </div>
+        <div class="obj-verb">④ 守る</div>
+        <div class="obj-desc">chmod 600 で<br>他人をブロック</div>
+        <span class="obj-cmds">chmod 600</span>
+      </div>
+    </div>
+
+    <p class="obj-intro">この 4 動作が体になじむと、「<code>Permission denied</code>」がもう怖くなくなります。原因が即座に切り分けられて、自分で直せるからです。</p>
+
+    <h2>概念説明</h2>
+
+    <h3>1. 「誰が」── ユーザとグループ</h3>
+    <p>Linux では、すべてのプロセス・ファイルに <strong>「誰のものか」</strong> が紐づいています。これを管理する単位が <strong>ユーザ</strong> と <strong>グループ</strong> です。</p>
+    <div class="codeblock">
+      <div class="codeblock-head"><span>bash</span></div>
+      <pre><span class="kw">id</span>
+<span class="comment"># → uid=1003(student) gid=1003(student) groups=1003(student)</span>
+
+<span class="kw">whoami</span>       <span class="comment"># → student     (ユーザ名だけ)</span>
+<span class="kw">groups</span>       <span class="comment"># → student     (所属グループだけ)</span></pre>
+    </div>
+
+    <h4>主グループと副グループ</h4>
+    <table class="op-table">
+      <tr><th>種類</th><th>役割</th><th>個数</th><th>定義場所</th></tr>
+      <tr><td><strong>主グループ</strong><br>(primary)</td><td>新規ファイル作成時に自動で付くグループ</td><td>必ず 1 つ</td><td><code>/etc/passwd</code> の 4 番目 (gid)</td></tr>
+      <tr><td><strong>副グループ</strong><br>(secondary)</td><td>「ついでに所属している」グループ。アクセス権を広げる</td><td>0 個以上</td><td><code>/etc/group</code> のメンバー欄</td></tr>
+    </table>
+    <div class="codeblock">
+      <div class="codeblock-head"><span>bash</span></div>
+      <pre><span class="kw">grep</span> '^student' /etc/passwd
+<span class="comment"># → student:x:1003:1003::/home/student:/bin/bash</span>
+<span class="comment">#                  ^^^^ ← 主グループ GID</span>
+
+<span class="kw">grep</span> '^adm:' /etc/group
+<span class="comment"># → adm:x:4:syslog,nk         ← adm グループのメンバー一覧</span></pre>
+    </div>
+    <p><code>/etc/passwd</code> と <code>/etc/group</code> は <strong>プレーンテキストの定義ファイル</strong> です。Linux のユーザ管理は驚くほどシンプルで、テキストエディタでも読めます（編集は専用コマンドを推奨）。</p>
+
+    <h4>🪟 Windows との違いコラム</h4>
+    <table class="dir-table">
+      <tr><th>観点</th><th>Linux</th><th>Windows</th></tr>
+      <tr><td><strong>主グループの概念</strong></td><td>必ず 1 つの主 + 複数の副</td><td>フラット（主の概念なし）</td></tr>
+      <tr><td><strong>新規ファイルの所有グループ</strong></td><td>プロセスの <strong>主グループ</strong> が自動付与</td><td>親フォルダの ACL を継承</td></tr>
+      <tr><td><strong>グループのネスト</strong></td><td>しない（フラット）</td><td>AD では「グループ of グループ」可</td></tr>
+      <tr><td><strong>権限表現</strong></td><td>9 文字（<code>-rwxr-xr--</code>）</td><td>ACL（許可・拒否 / 継承 / 詳細）</td></tr>
+      <tr><td><strong>グループ切替</strong></td><td><code>newgrp</code> でセッション内切替可</td><td>該当なし</td></tr>
+      <tr><td><strong>データ保存</strong></td><td><code>/etc/passwd</code> / <code>/etc/group</code></td><td>SAM / Active Directory</td></tr>
+    </table>
+    <div class="callout-amber"><strong>Windows 経験者が引っかかるポイント</strong>: <code>groups</code> で 3 つ並んでいるのに、新規ファイルは 1 つにしか属さない ── これは「主グループだけが新規ファイルに自動で付く」ためです。</div>
+
+    <h4>よく使う「特権グループ」── グループに入る = できることが増える</h4>
+    <p>Linux では、<strong>特定のグループに所属することで、ある操作が許される</strong> という設計が広く使われています。代表例：</p>
+    <table class="dir-table">
+      <tr><th>グループ</th><th>役割</th><th>入っていると</th></tr>
+      <tr><td><code>sudo</code></td><td>sudo 実行権限（Debian/Ubuntu 系）</td><td><code>sudo</code> で root 操作可</td></tr>
+      <tr><td><code>wheel</code></td><td>sudo 実行権限（RHEL / AlmaLinux 系）</td><td>同上（伝統的な名前）</td></tr>
+      <tr><td><code>adm</code></td><td>管理者ログ閲覧</td><td><code>/var/log/auth.log</code> 等が読める</td></tr>
+      <tr><td><code>docker</code></td><td>Docker 操作</td><td><code>docker</code> コマンド使用可（実質 root 相当）</td></tr>
+      <tr><td><code>www-data</code></td><td>Web サーバの実行ユーザ</td><td>nginx/Apache が読み書きするファイルの所有グループ</td></tr>
+      <tr><td><code>disk</code></td><td>ディスクデバイス直接アクセス</td><td><code>/dev/sda</code> 等が読める（取り扱い注意）</td></tr>
+    </table>
+    <div class="callout-purple"><strong>重要な発想</strong>: 「sudo を使えるユーザ」は <strong><code>sudo</code> グループに入っている人</strong> という形で管理されています。<code>/etc/sudoers</code> を覗くと、その証拠が 1 行で書かれています：
+    <div class="codeblock" style="margin:10px 0 0">
+      <div class="codeblock-head"><span>/etc/sudoers</span></div>
+      <pre><span class="kw">%sudo</span>	ALL=(ALL:ALL) ALL
+<span class="comment"># └─ 「sudo グループのメンバーは、全ホストで・全ユーザに化けて・全コマンドを実行可能」</span></pre>
+    </div>
+    <code>%</code> はグループを表す記号。つまり「sudo を使えるようにする = sudo グループに追加する」という、驚くほどシンプルな仕組みです。</div>
+    <p>この章の演習で <code>student</code> を <code>adm</code> グループに追加するのは、まさにこの仕組み（<strong>グループ追加で特権が広がる</strong>）を 1 つ体感するためです。</p>
+
+    <h3>2. 「読む」── <code>-rwxr-xr--</code> を 3 × 3 で分解</h3>
+    <p><code>ls -l</code> の左端 10 文字は、ファイル種別 1 文字 + 権限 9 文字（3 × 3）で構成されています。</p>
+
+    <div class="perm-decoder">
+      <div class="perm-decoder-string">
+        <span class="pd-type">-</span><span class="pd-user">rwx</span><span class="pd-group">r-x</span><span class="pd-other">r--</span>
+      </div>
+      <div class="perm-decoder-labels">
+        <div class="pdl-type">種別</div>
+        <div class="pdl-user">user<br>(所有者)</div>
+        <div class="pdl-group">group<br>(グループ)</div>
+        <div class="pdl-other">others<br>(その他)</div>
+      </div>
+    </div>
+
+    <table class="op-table">
+      <tr><th>文字</th><th>意味</th><th>ファイル</th><th>ディレクトリ</th></tr>
+      <tr><td><code>r</code> (read)</td><td>読む</td><td>内容を読める</td><td><code>ls</code> で一覧を見られる</td></tr>
+      <tr><td><code>w</code> (write)</td><td>書く</td><td>編集できる</td><td>中にファイルを作る・消せる</td></tr>
+      <tr><td><code>x</code> (execute)</td><td>実行</td><td>プログラムとして実行可</td><td><code>cd</code> で入れる</td></tr>
+      <tr><td><code>-</code></td><td>なし</td><td colspan="2">該当の権限なし</td></tr>
+    </table>
+    <p>例: <code>-rwxr-xr--</code> なら <strong>所有者は全部 OK / グループは読と実行 / 他人は読むだけ</strong>。先頭の <code>-</code> は「通常ファイル」を表します（<code>d</code> ならディレクトリ、<code>l</code> ならシンボリックリンク）。</p>
+
+    <h3>3. 「変える」── 数字と記号の 2 方式</h3>
+    <p><code>chmod</code>（change mode）で権限を変えます。<strong>書き方は 2 通り</strong> あり、現場では両方使われます。</p>
+
+    <h4>記号方式（部分的に変えたいとき）</h4>
+    <div class="codeblock">
+      <div class="codeblock-head"><span>bash · 記号方式</span></div>
+      <pre><span class="kw">chmod</span> u+x file       <span class="comment"># user に実行権限を「足す」</span>
+<span class="kw">chmod</span> g-w file       <span class="comment"># group から書き権限を「引く」</span>
+<span class="kw">chmod</span> o=r file       <span class="comment"># others を「読みだけ」に設定</span>
+<span class="kw">chmod</span> a+r file       <span class="comment"># all (u+g+o) に読み権限を足す</span>
+<span class="kw">chmod</span> u+x,go-r file  <span class="comment"># 複数指定はカンマ区切り</span></pre>
+    </div>
+    <table class="dir-table">
+      <tr><th>記号</th><th>意味</th></tr>
+      <tr><td><code>u</code> / <code>g</code> / <code>o</code> / <code>a</code></td><td>user / group / others / all</td></tr>
+      <tr><td><code>+</code> / <code>-</code> / <code>=</code></td><td>足す / 引く / 設定（上書き）</td></tr>
+      <tr><td><code>r</code> / <code>w</code> / <code>x</code></td><td>読 / 書 / 実行</td></tr>
+    </table>
+
+    <h4>数字方式（全部いっぺんに設定）</h4>
+    <p><strong>仕組み</strong>: <code>rwx</code> の 3 つの権限はそれぞれ <strong>1 ビット</strong>（オン/オフ）で表せるので、3 つまとめて <strong>3 ビットの 2 進数</strong> と見ると一つの数字になります。</p>
+    <div class="codeblock">
+      <div class="codeblock-head"><span>ビット位置の重み</span></div>
+      <pre>          r   w   x
+ビット位置 →  <span class="num">4</span>   <span class="num">2</span>   <span class="num">1</span>     <span class="comment"># それぞれの重み (2² 2¹ 2⁰)</span>
+2進数表記  →  1   1   1     <span class="comment"># 全部 ON なら 111(2) = 7(10)</span></pre>
+    </div>
+    <p><code>r</code> が一番上の桁 (4)、<code>w</code> が真ん中の桁 (2)、<code>x</code> が一番下の桁 (1)。それぞれが <strong>オンなら足す / オフなら足さない</strong> だけです。</p>
+
+    <div class="chmod-calc">
+      <div class="chmod-calc-row" style="border-bottom:1px solid var(--accent-border);padding-bottom:8px">
+        <div class="ccl">表記</div>
+        <div class="ccc r">r (4)</div>
+        <div class="ccc w">w (2)</div>
+        <div class="ccc x">x (1)</div>
+        <div class="cct">合計</div>
+      </div>
+      <div class="chmod-calc-row"><div class="ccl">rwx</div><div class="ccc r">4</div><div class="ccc w">2</div><div class="ccc x">1</div><div class="cct">7</div></div>
+      <div class="chmod-calc-row"><div class="ccl">rw-</div><div class="ccc r">4</div><div class="ccc w">2</div><div class="ccc off">0</div><div class="cct">6</div></div>
+      <div class="chmod-calc-row"><div class="ccl">r-x</div><div class="ccc r">4</div><div class="ccc off">0</div><div class="ccc x">1</div><div class="cct">5</div></div>
+      <div class="chmod-calc-row"><div class="ccl">r--</div><div class="ccc r">4</div><div class="ccc off">0</div><div class="ccc off">0</div><div class="cct">4</div></div>
+      <div class="chmod-calc-row"><div class="ccl">-wx</div><div class="ccc off">0</div><div class="ccc w">2</div><div class="ccc x">1</div><div class="cct">3</div></div>
+      <div class="chmod-calc-row"><div class="ccl">-w-</div><div class="ccc off">0</div><div class="ccc w">2</div><div class="ccc off">0</div><div class="cct">2</div></div>
+      <div class="chmod-calc-row"><div class="ccl">--x</div><div class="ccc off">0</div><div class="ccc off">0</div><div class="ccc x">1</div><div class="cct">1</div></div>
+      <div class="chmod-calc-row"><div class="ccl">---</div><div class="ccc off">0</div><div class="ccc off">0</div><div class="ccc off">0</div><div class="cct">0</div></div>
+    </div>
+
+    <p>この「3ビット数字」を <strong>user / group / others の 3 桁分</strong> 並べたものが <code>chmod 755</code> の正体です：</p>
+    <div class="codeblock">
+      <div class="codeblock-head"><span>chmod 755 の解読</span></div>
+      <pre><span class="kw">chmod</span> <span class="num">755</span> file
+        ↓
+        <span class="num">7</span>    <span class="num">5</span>    <span class="num">5</span>
+       111  101  101
+       <span class="perm">rwx  r-x  r-x</span>
+       user group others
+        ↓
+       <span class="perm">-rwxr-xr-x</span></pre>
+    </div>
+    <div class="codeblock">
+      <div class="codeblock-head"><span>bash · よく使うパターン</span></div>
+      <pre><span class="kw">chmod</span> <span class="num">755</span> file   <span class="comment"># rwx r-x r-x → 実行可能なスクリプトの定番</span>
+<span class="kw">chmod</span> <span class="num">644</span> file   <span class="comment"># rw- r-- r-- → 通常のテキストファイル</span>
+<span class="kw">chmod</span> <span class="num">600</span> file   <span class="comment"># rw- --- --- → SSH 秘密鍵の定番</span>
+<span class="kw">chmod</span> <span class="num">700</span> file   <span class="comment"># rwx --- --- → 自分専用の実行ファイル</span></pre>
+    </div>
+    <p>慣れると、<code>-rwxr-xr-x</code> を見た瞬間に <code>111 101 101</code> → <code>755</code> と読める / その逆もできるようになります。</p>
+    <div class="callout-key"><strong>現場の使い分け</strong>: 「部分的に変えたい / 設定を残したい」→ <strong>記号方式</strong>（<code>chmod +x</code> で実行権限だけ追加）/ 「権限をひと言で全部決めたい」→ <strong>数字方式</strong>（<code>chmod 755 ~/bin/myscript</code> でスクリプト用）</div>
+
+    <h3>4. 「守る」── 自分のファイルを他人から隠す</h3>
+    <p>SSH 鍵やパスワードを書いたファイルは、<strong>他人から完全に隠す</strong> 必要があります。</p>
+    <div class="codeblock">
+      <div class="codeblock-head"><span>bash · SSH 秘密鍵の典型</span></div>
+      <pre><span class="kw">chmod</span> <span class="num">600</span> ~/.ssh/id_ed25519
+<span class="kw">ls</span> -l ~/.ssh/id_ed25519
+<span class="comment"># → </span><span class="perm">-rw-------</span><span class="comment"> 1 student student 411 ... id_ed25519</span></pre>
+    </div>
+    <p><code>-rw-------</code> = 自分だけ読み書き可、グループも他人もアクセス不可。</p>
+    <div class="callout-amber"><strong>注意</strong>: SSH の鍵は権限がゆるいと SSH 側が <strong>「鍵を読まない」</strong> という安全装置を発動します。Part 3 で SSH 鍵を扱うときに再登場します。</div>
+
+    <h3>5. inode コラム ── 権限はどこに保存されている？</h3>
+    <p>「ファイルの権限」は <strong>ファイル本体（中身）に書かれているわけではありません</strong>。Linux のファイルシステムでは、ファイルごとに <strong>inode</strong> という小さな台帳が用意されていて、そこに権限・所有者・タイムスタンプなどのメタデータが書かれています。</p>
+    <div class="codeblock">
+      <div class="codeblock-head"><span>bash · inode を覗く</span></div>
+      <pre><span class="kw">ls</span> -li ~/bin/hello
+<span class="comment"># → </span><span class="var">396936</span><span class="comment"> </span><span class="perm">-rwxrwxr-x</span><span class="comment"> 1 student student 70  5月 16 09:35 /home/student/bin/hello</span>
+<span class="comment">#   ^^^^^^ inode 番号</span>
+
+<span class="kw">stat</span> ~/bin/hello
+<span class="comment">#   File: /home/student/bin/hello</span>
+<span class="comment">#   Size: 70    Blocks: 8    IO Block: 4096    通常ファイル</span>
+<span class="comment"># Device: 252,0  Inode: </span><span class="var">396936</span><span class="comment">  Links: 1</span>
+<span class="comment"># Access: (0775/-rwxrwxr-x)  Uid: (1003/student)  Gid: (1003/student)</span>
+<span class="comment"># Access: 2026-05-16 09:35:44 +0900</span>
+<span class="comment"># Modify: 2026-05-16 09:35:44 +0900</span>
+<span class="comment"># Change: 2026-05-16 09:35:44 +0900</span></pre>
+    </div>
+    <p><strong>ファイル名は inode へのポインタにすぎません</strong>。<code>chmod</code> で権限を変えると、ファイルの中身ではなく <strong>inode が書き換わります</strong>（その証拠に <code>stat</code> の <strong>Change</strong> タイムスタンプが更新される）。</p>
+    <p style="color:var(--muted);font-size:13px">※ ハードリンク / シンボリックリンクという「inode の使いまわし」の話は、Part 3 のサーバ運用編で詳しく扱います。</p>
+
+    <h2>試してみよう：<code>hello</code> の権限を解剖して、グループ追加で世界を広げる</h2>
+    <p>Chapter 6 で作った <code>~/bin/hello</code> を題材に、<strong>4 動作</strong> をすべて体験します。</p>
+
+    <div class="fail-safe">
+      <div class="fail-safe-title">🛟 演習の安全範囲</div>
+      <p style="font-size:13px;line-height:1.7">触るのは <code>~/bin/hello</code> の権限と、<code>student</code> の所属グループだけ。すべて元に戻せる操作です。ステップ ⑦ の <code>usermod</code> は <strong>root 権限が必要</strong> なので、講師がこの操作を事前に済ませている場合は ⑧ から進めてください。</p>
+    </div>
+
+    <h3>まず learner01 に入る</h3>
+    <div class="codeblock">
+      <div class="codeblock-head">
+        <span>bash · workstation01 から SSH</span>
+        <button class="copy-btn" data-copy="ssh student@learner01">📋 コピー → 右ターミナルで Ctrl+V</button>
+      </div>
+      <pre><span class="kw">ssh</span> student@learner01</pre>
+    </div>
+
+    <h3><span class="step-num">①</span>誰が ── 自分のユーザとグループを確認</h3>
+    <div class="codeblock">
+      <div class="codeblock-head">
+        <span>bash</span>
+        <button class="copy-btn" data-copy="id&#10;groups">📋 コピー</button>
+      </div>
+      <pre><span class="kw">id</span>
+<span class="comment"># → uid=1003(student) gid=1003(student) groups=1003(student)</span>
+
+<span class="kw">groups</span>
+<span class="comment"># → student</span></pre>
+    </div>
+    <p>主グループ = <code>student</code>、副グループ = なし。</p>
+
+    <h3><span class="step-num">②</span>読む ── <code>~/bin/hello</code> の権限を観察</h3>
+    <div class="codeblock">
+      <div class="codeblock-head">
+        <span>bash</span>
+        <button class="copy-btn" data-copy="ls -l ~/bin/hello">📋 コピー</button>
+      </div>
+      <pre><span class="kw">ls</span> -l ~/bin/hello
+<span class="comment"># → </span><span class="perm">-rwxrwxr-x</span><span class="comment"> 1 student student 70  5月 16 09:35 /home/student/bin/hello</span></pre>
+    </div>
+    <p><strong>Chapter 6 の <code>chmod +x</code> で <code>x</code> が 3 箇所すべてに付いた</strong> のがここで確認できます。</p>
+
+    <h3><span class="step-num">③</span>inode を覗く ── 権限はどこに保存されているか</h3>
+    <div class="codeblock">
+      <div class="codeblock-head">
+        <span>bash</span>
+        <button class="copy-btn" data-copy="ls -li ~/bin/hello&#10;stat ~/bin/hello">📋 コピー</button>
+      </div>
+      <pre><span class="kw">ls</span> -li ~/bin/hello
+<span class="comment"># → </span><span class="var">396936</span><span class="comment"> -rwxrwxr-x 1 student student ...</span>
+
+<span class="kw">stat</span> ~/bin/hello
+<span class="comment"># Inode: 396936 / Access: (0775/-rwxrwxr-x) / Uid: 1003 / Gid: 1003</span></pre>
+    </div>
+    <p><strong>inode 番号 (例: 396936)</strong> はあなたの環境では別の数字になります。これがファイルの「身分証明書」です。</p>
+
+    <h3><span class="step-num">④</span>変える（数字方式）── <code>chmod 644</code> で実行権限を剥がす</h3>
+    <div class="codeblock">
+      <div class="codeblock-head">
+        <span>bash</span>
+        <button class="copy-btn" data-copy="chmod 644 ~/bin/hello&#10;ls -l ~/bin/hello&#10;~/bin/hello">📋 コピー</button>
+      </div>
+      <pre><span class="kw">chmod</span> <span class="num">644</span> ~/bin/hello
+<span class="kw">ls</span> -l ~/bin/hello
+<span class="comment"># → </span><span class="perm-blocked">-rw-r--r--</span><span class="comment"> 1 student student ...</span>
+
+~/bin/hello
+<span class="comment"># → bash: /home/student/bin/hello: 許可がありません</span></pre>
+    </div>
+    <p>実行権限がないと、シェルは「これは実行ファイルではない」と判断して拒否します。</p>
+
+    <h3><span class="step-num">⑤</span>変える（記号方式）── <code>chmod u+x</code> で自分だけ実行可能に</h3>
+    <div class="codeblock">
+      <div class="codeblock-head">
+        <span>bash</span>
+        <button class="copy-btn" data-copy="chmod u+x ~/bin/hello&#10;ls -l ~/bin/hello&#10;~/bin/hello">📋 コピー</button>
+      </div>
+      <pre><span class="kw">chmod</span> u+x ~/bin/hello
+<span class="kw">ls</span> -l ~/bin/hello
+<span class="comment"># → </span><span class="perm">-rwxr--r--</span><span class="comment"> 1 student student ...</span>
+
+~/bin/hello
+<span class="comment"># → こんにちは、student さん！ (from learner01)</span></pre>
+    </div>
+    <p><code>u+x</code> = user に x を足す。自分だけ実行できる状態になりました。</p>
+
+    <h3><span class="step-num">⑥</span>守る ── <code>chmod 600</code> で他人から完全ブロック</h3>
+    <div class="codeblock">
+      <div class="codeblock-head">
+        <span>bash</span>
+        <button class="copy-btn" data-copy="chmod 600 ~/bin/hello&#10;ls -l ~/bin/hello&#10;chmod 755 ~/bin/hello&#10;ls -l ~/bin/hello">📋 コピー</button>
+      </div>
+      <pre><span class="kw">chmod</span> <span class="num">600</span> ~/bin/hello
+<span class="kw">ls</span> -l ~/bin/hello
+<span class="comment"># → </span><span class="perm-blocked">-rw-------</span><span class="comment"> 1 student student ...</span>
+
+<span class="comment"># 確認後、実行できる状態に戻す</span>
+<span class="kw">chmod</span> <span class="num">755</span> ~/bin/hello
+<span class="kw">ls</span> -l ~/bin/hello
+<span class="comment"># → </span><span class="perm">-rwxr-xr-x</span><span class="comment"> 1 student student ...</span></pre>
+    </div>
+
+    <h3><span class="step-num">⑦</span>グループの力 ── 副グループに追加して新しい世界を開く（要 sudo）</h3>
+    <div class="callout-amber">ここからは <strong>root 権限が必要</strong> な操作です。<code>workstation01</code> の <code>alice</code> 側で、sudo 可能なユーザーから実行します（演習環境では事前準備済みの場合あり）。</div>
+    <div class="codeblock">
+      <div class="codeblock-head">
+        <span>bash · sudo 可能なユーザで実行</span>
+        <button class="copy-btn" data-copy="sudo usermod -aG adm student&#10;grep '^adm:' /etc/group">📋 コピー</button>
+      </div>
+      <pre><span class="kw">sudo</span> usermod -aG adm student
+<span class="comment"># -a: 「追加 (append)」/ -G: 副グループ指定</span>
+<span class="comment"># -a を忘れると既存の副グループを上書きする大事故になる</span>
+
+<span class="kw">grep</span> '^adm:' /etc/group
+<span class="comment"># → adm:x:4:syslog,nk,student   ← student が追加された</span></pre>
+    </div>
+
+    <h3><span class="step-num">⑧</span>反映 ── 新セッションで効果を確認</h3>
+    <div class="callout-coral">
+      <span class="coral-badge">⚠ 要注意ポイント</span>
+      <p style="margin-top:6px">グループ追加は <strong>今開いているシェルには反映されません</strong>。プロセスのグループメンバーシップは、ログイン時に決まるからです。いったん <code>exit</code> して再ログインするか、<code>newgrp</code> で切り替えます。</p>
+    </div>
+    <div class="codeblock">
+      <div class="codeblock-head">
+        <span>bash</span>
+        <button class="copy-btn" data-copy="groups&#10;exit">📋 コピー</button>
+      </div>
+      <pre><span class="comment"># 今のシェルでは</span>
+<span class="kw">groups</span>
+<span class="comment"># → student            (まだ adm が見えない)</span>
+
+<span class="kw">exit</span></pre>
+    </div>
+    <p>再 SSH してから確認：</p>
+    <div class="codeblock">
+      <div class="codeblock-head">
+        <span>bash · 再 SSH 後</span>
+        <button class="copy-btn" data-copy="ssh student@learner01&#10;groups">📋 コピー</button>
+      </div>
+      <pre><span class="kw">ssh</span> student@learner01
+<span class="kw">groups</span>
+<span class="comment"># → student adm         ← 反映された</span></pre>
+    </div>
+
+    <h3><span class="step-num">⑨</span>ご褒美 ── 今まで読めなかったログが読めるようになる</h3>
+    <p><code>/var/log/auth.log</code>（認証ログ）は <strong><code>adm</code> グループのメンバーしか読めない</strong> ファイルです。</p>
+    <div class="codeblock">
+      <div class="codeblock-head">
+        <span>bash</span>
+        <button class="copy-btn" data-copy="ls -l /var/log/auth.log&#10;head -3 /var/log/auth.log">📋 コピー</button>
+      </div>
+      <pre><span class="kw">ls</span> -l /var/log/auth.log
+<span class="comment"># → -rw-r----- 1 syslog adm ...    ← group=adm, group権限=r--</span>
+
+<span class="comment"># 追加前（昔の自分）は:</span>
+<span class="comment"># cat: /var/log/auth.log: 許可がありません</span>
+
+<span class="comment"># 追加後の今:</span>
+<span class="kw">head</span> -3 /var/log/auth.log
+<span class="comment"># → 2026-05-16T09:30:58 learner01 sshd[1148]: Server listening on 0.0.0.0 port 22</span></pre>
+    </div>
+    <div class="callout-key"><strong>「グループに入る」という行為で、ファイルへのアクセス権が広がった</strong> ── これがグループの実用例です。Part 3 以降のサーバ運用では、サービスごとに専用グループ（<code>adm</code> / <code>wheel</code> / <code>docker</code> / <code>www-data</code> 等）に追加する作業が頻繁に登場します。</div>
+
+    <div class="fail-safe">
+      <div class="fail-safe-title">🛟 失敗しても安全に戻せる方法</div>
+      <table class="dir-table" style="margin:6px 0 0">
+        <tr><th>起きたこと</th><th>対処</th></tr>
+        <tr><td><code>chmod</code> で実行権限を消して <code>hello</code> が動かない</td><td><code>chmod +x ~/bin/hello</code></td></tr>
+        <tr><td><code>chmod 000</code> で自分も読めなくなった</td><td><code>chmod 755 ~/bin/hello</code>（所有者なら <code>chmod</code> は常に可能）</td></tr>
+        <tr><td>グループ追加後 <code>groups</code> に出ない</td><td><code>exit</code> → 再 SSH で新セッション</td></tr>
+        <tr><td><code>usermod -G</code> で <code>-a</code> を忘れ既存副グループを上書きした</td><td><code>sudo usermod -aG group1,group2,... student</code> で必要な副グループを全部足し直す</td></tr>
+        <tr><td>大事なファイルを誤って <code>chmod 777</code></td><td><code>chmod 644 ファイル</code>（一般）or <code>chmod 600 ファイル</code>（鍵類）</td></tr>
+      </table>
+    </div>
+
+    <h2>詰まったら</h2>
+    <ul class="bullets" style="margin-bottom:14px">
+      <li><strong>段階ヒント</strong>: 定番の詰まりポイントへの段階開示</li>
+      <li><strong>AI に相談</strong>: Cloudflare Workers AI に自由質問できる相談窓口（v2 公開予定）</li>
+    </ul>
+
+    <details class="hint stage1">
+      <summary>💡 軽く方向だけ</summary>
+      <div class="hint-body">
+        <code>-rwxr-xr--</code> は左から <strong>ファイル種別 / user / group / others</strong> の 4 区画に分けて読みます。<code>chmod</code> には <strong>数字方式 (755)</strong> と <strong>記号方式 (u+x)</strong> の 2 種類があり、どちらも同じ操作ができます。グループの追加は <code>usermod -aG</code>、効果は <strong>新セッション</strong> で初めて見えます。
+      </div>
+    </details>
+
+    <details class="hint stage2">
+      <summary>💡 具体的な手順</summary>
+      <div class="hint-body">
+        <div class="codeblock" style="margin:0 0 8px">
+          <pre><span class="comment"># 確認</span>
+<span class="kw">id</span>                                    <span class="comment"># 自分のユーザ・グループ</span>
+<span class="kw">ls</span> -l ~/bin/hello                     <span class="comment"># 現在の権限を 3×3 で読む</span>
+<span class="kw">stat</span> ~/bin/hello                      <span class="comment"># メタデータ全部</span>
+
+<span class="comment"># 変える</span>
+<span class="kw">chmod</span> <span class="num">755</span> ~/bin/hello                 <span class="comment"># 数字方式</span>
+<span class="kw">chmod</span> u+x ~/bin/hello                 <span class="comment"># 記号方式</span>
+
+<span class="comment"># 守る</span>
+<span class="kw">chmod</span> <span class="num">600</span> ~/bin/hello                 <span class="comment"># 自分以外完全ブロック</span>
+
+<span class="comment"># グループ追加（要 sudo）</span>
+<span class="kw">sudo</span> usermod -aG adm student
+<span class="kw">exit</span> &amp;&amp; <span class="kw">ssh</span> student@learner01     <span class="comment"># 新セッションで反映</span>
+<span class="kw">groups</span></pre>
+        </div>
+        <strong>数字方式と記号方式の使い分け</strong>: 全部いっぺん → 数字 / 部分的に変えたい → 記号
+      </div>
+    </details>
+
+    <details class="hint answer">
+      <summary>✅ 答えを見る</summary>
+      <div class="hint-body">
+        <div class="codeblock" style="margin:0 0 10px">
+          <pre><span class="comment"># ① 誰が</span>
+<span class="kw">id</span>
+
+<span class="comment"># ② 読む</span>
+<span class="kw">ls</span> -l ~/bin/hello
+
+<span class="comment"># ③ inode</span>
+<span class="kw">ls</span> -li ~/bin/hello
+<span class="kw">stat</span> ~/bin/hello
+
+<span class="comment"># ④⑤⑥ 変える / 守る</span>
+<span class="kw">chmod</span> <span class="num">644</span> ~/bin/hello       <span class="comment"># 実行権限剥がす</span>
+~/bin/hello                  <span class="comment"># → 許可がありません</span>
+<span class="kw">chmod</span> u+x ~/bin/hello       <span class="comment"># 自分だけ実行可</span>
+~/bin/hello                  <span class="comment"># → こんにちは、...</span>
+<span class="kw">chmod</span> <span class="num">600</span> ~/bin/hello       <span class="comment"># 他人完全ブロック</span>
+<span class="kw">chmod</span> <span class="num">755</span> ~/bin/hello       <span class="comment"># 元に戻す</span>
+
+<span class="comment"># ⑦⑧ グループ追加（要 sudo）</span>
+<span class="kw">sudo</span> usermod -aG adm student
+<span class="kw">exit</span>
+<span class="kw">ssh</span> student@learner01
+<span class="kw">groups</span>                       <span class="comment"># → student adm</span>
+
+<span class="comment"># ⑨ ご褒美</span>
+<span class="kw">head</span> -3 /var/log/auth.log    <span class="comment"># 読めるようになった</span></pre>
+        </div>
+        <p><strong>ポイント</strong>: <code>ls -l</code> は左から <strong>種別 / user / group / others</strong> / <code>chmod</code> の数字は <strong>r=4 / w=2 / x=1</strong> の足し算 / グループの効果は <strong>新セッション</strong> で初めて見える</p>
+      </div>
+    </details>
+
+    <h3>🤖 AI に相談（v2 公開予定）</h3>
+    <div class="ai-chat-mock">
+      <div class="ai-chat-head">
+        <span class="ai-badge">準備中</span>
+        <span class="ai-chat-title">Cloudflare Workers AI に自由質問</span>
+      </div>
+      <div class="ai-chat-body">
+        <p>v2 公開時に有効化されます。「権限が思った通りにならない」「<code>Permission denied</code> が消えない」とフリーテキストで質問できる相談窓口になる予定です。</p>
+        <div class="ai-chat-input-mock">
+          <input type="text" placeholder="例: chmod 755 と u+x って何が違う？ / グループ追加が反映されない" disabled>
+          <button class="ai-send-btn" disabled>送信</button>
+        </div>
+        <div class="ai-chat-meta">想定: 章タイトル + 直前のコマンド履歴を含めて Workers AI に問い合わせ</div>
+      </div>
+    </div>
+
+    <h2>修了確認</h2>
+    <p>学んだことが身についたか、2 問だけ確認してみましょう。</p>
+
+    <div class="quiz">
+      <div class="quiz-title">問 1 · -rwxr-xr-- を分解する</div>
+      <div class="quiz-q"><code>-rwxr-xr--</code> という権限表示について：<br>
+      ① <strong>所有者</strong>は何ができますか？<br>
+      ② <strong>グループメンバー</strong>は何ができますか？<br>
+      ③ <strong>その他</strong>は何ができますか？<br>
+      ④ これを <strong>数字方式</strong> で表すと何ですか？</div>
+      <button class="quiz-btn" data-modal="quiz1">考えました → 解答を見る</button>
+    </div>
+
+    <div class="quiz">
+      <div class="quiz-title">問 2 · グループ追加が反映されない</div>
+      <div class="quiz-q"><code>sudo usermod -aG docker student</code> で student を docker グループに追加しましたが、<code>groups</code> を打っても docker が出てきません。なぜですか？ どう対処すればよいですか？</div>
+      <button class="quiz-btn" data-modal="quiz2">考えました → 解答を見る</button>
+    </div>
+
+    <h2>次の章へ</h2>
+    <p>次は <strong>Chapter 8「Part 1 修了演習」</strong> です。</p>
+    <p>Chapter 1 〜 7 で習った内容（SSH / ファイル操作 / grep / vim / 環境変数 / 権限）を <strong>1 つのシナリオに統合</strong> して、実機サーバ上で総合演習を行います。Part 1 の卒業試験です。</p>
+
+  </main>
+
+  <!-- ── Terminal pane (D-017 接続カード) ── -->
+  <aside class="terminal-pane">
+    <div class="term-head">
+      <span class="label">⌨ 演習サーバへ接続する</span>
+      <span class="server-status" title="サーバの稼働状況（手動更新）"><span class="status-dot"></span>サーバ確認中</span>
+    </div>
+
+    <div class="connect-stack">
+
+      <div class="connect-card option-a">
+        <div class="connect-card-head">
+          <span class="connect-card-badge">Option A</span>
+          <span class="connect-card-title">🌐 ブラウザで開く（Guacamole）</span>
+        </div>
+        <div class="connect-card-desc">
+          <strong>環境構築不要・すぐ開始</strong>できます。新しいタブでブラウザ内ターミナルが起動します。初回は <strong>メール OTP 認証</strong> 画面が出ます。
+        </div>
+        <a href="https://lab.infra-study.org/guacamole/" target="_blank" rel="noopener" class="connect-btn">
+          <span>🚀 別タブで Guacamole を開く</span>
+          <span class="arr">↗</span>
+        </a>
+        <div class="connect-card-meta">lab.infra-study.org / workstation01 経由</div>
+      </div>
+
+      <div class="connect-card option-b">
+        <div class="connect-card-head">
+          <span class="connect-card-badge">Option B</span>
+          <span class="connect-card-title">💻 手元 PC から SSH</span>
+        </div>
+        <div class="connect-card-desc">
+          <strong>本物のサーバ管理者体験</strong>。Mac / Linux は標準の <code>ssh</code>、Windows は Teraterm / OpenSSH / PuTTY。<strong>SSH 鍵認証</strong>で接続します。
+        </div>
+        <div class="connect-ssh-cmd">
+          <code id="sshCmd">ssh -i ~/.ssh/infra_study alice@ssh.infra-study.org</code>
+          <button class="mini-copy" data-copy-ssh>📋</button>
+        </div>
+        <div class="connect-card-meta">Cloudflare Tunnel TCP 経由 / 鍵認証のみ</div>
+        <span class="connect-pending">⏳ Phase B 準備中（受講者鍵配布フロー設計中）</span>
+      </div>
+
+      <div class="connect-card" style="border-left:3px solid var(--green)">
+        <div class="connect-card-head">
+          <span class="connect-card-badge" style="background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text)">手順</span>
+          <span class="connect-card-title">📋 接続後の流れ</span>
+        </div>
+        <div class="connect-card-desc" style="margin-bottom:0">
+          <strong>1.</strong> 上の A または B で <code>alice@workstation01:~$</code> に到達<br>
+          <strong>2.</strong> 踏み台から <code>ssh student@learner01</code> でジャンプ<br>
+          <strong>3.</strong> <code>student@learner01:~$</code> で演習開始
+        </div>
+      </div>
+
+    </div>
+
+    <div class="checklist prominent">
+      <div class="checklist-head">
+        <span class="checklist-title">📊 演習チェック</span>
+        <span class="checklist-progress" id="checklistProgress">0 / 4</span>
+      </div>
+      <label class="checklist-item"><input type="checkbox"> <code>id</code> / <code>groups</code> で自分の所属を確認</label>
+      <label class="checklist-item"><input type="checkbox"> <code>ls -l ~/bin/hello</code> の 9 文字を 3×3 で読めた</label>
+      <label class="checklist-item"><input type="checkbox"> <code>chmod 755</code> と <code>chmod u+x</code> の両方を試した</label>
+      <label class="checklist-item"><input type="checkbox"> <code>adm</code> グループ追加で <code>/var/log/auth.log</code> が読めた</label>
+    </div>
+  </aside>
+
+</div>
+
+<!-- ─── Footer ─── -->
+<footer class="chapter-footer">
+  <button class="foot-btn">← Chapter 6 (環境変数)</button>
+  <button class="foot-btn complete">この章を完了 ✓</button>
+  <button class="foot-btn">Chapter 8 →</button>
+</footer>
+
+<!-- ─── Modals ─── -->
+<div class="modal-backdrop" id="modal-quiz1">
+  <div class="modal">
+    <div class="modal-title">問 1 · 解答</div>
+    <div class="modal-body">
+      <ul>
+        <li><strong>① 所有者</strong>: 読・書・実行（<code>rwx</code>）すべて可能</li>
+        <li><strong>② グループメンバー</strong>: 読・実行は可能、書き込み不可（<code>r-x</code>）</li>
+        <li><strong>③ その他</strong>: 読むだけ可能（<code>r--</code>）</li>
+        <li><strong>④ 数字方式</strong>: <code>754</code></li>
+      </ul>
+      <p style="margin-top:12px"><strong>数字の計算</strong>: r=4, w=2, x=1 で足し算</p>
+      <div class="codeblock" style="margin:8px 0">
+        <pre>user:   rwx = 4 + 2 + 1 = <span class="num">7</span>
+group:  r-x = 4 + 0 + 1 = <span class="num">5</span>
+others: r-- = 4 + 0 + 0 = <span class="num">4</span>
+                         ↓
+                       <span class="num">754</span></pre>
+      </div>
+    </div>
+    <button class="modal-close" data-close>閉じる</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-quiz2">
+  <div class="modal">
+    <div class="modal-title">問 2 · 解答</div>
+    <div class="modal-body">
+      <p><strong>原因</strong>: グループのメンバーシップは <strong>ログイン時にプロセスへ焼き付けられる</strong> ため、既に開いているシェルには反映されない。<code>/etc/group</code> には書かれているが、シェル側がそれを読み直していない。</p>
+      <p style="margin-top:10px"><strong>対処（いずれか）</strong>:</p>
+      <table>
+        <tr><th>方法</th><th>コマンド</th></tr>
+        <tr><td>① ログアウト → 再ログイン<br>（最も確実）</td><td><code>exit</code><br><code>ssh student@learner01</code><br><code>groups</code> → <code>student docker</code></td></tr>
+        <tr><td>② <code>newgrp</code> で<br>同セッション内グループ切替</td><td><code>newgrp docker</code><br><code>groups</code></td></tr>
+        <tr><td>③ <code>su -</code> で<br>自分にログインし直す</td><td><code>su - student</code><br><code>groups</code></td></tr>
+      </table>
+      <p style="margin-top:12px"><strong>実務 Tips</strong>: グループ追加後に「反映されない」と慌てる新人が必ず通る関門。<code>-aG</code> の <code>-a</code>（append）を忘れると <strong>既存の副グループを全部消す</strong> 大事故に繋がるので、こちらも要注意。</p>
+    </div>
+    <button class="modal-close" data-close>閉じる</button>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.copy-btn').forEach(btn=>{
+  btn.addEventListener('click',async()=>{
+    const text=btn.dataset.copy.replace(/&#10;/g,'\n');
+    try{
+      await navigator.clipboard.writeText(text);
+      const orig=btn.textContent;
+      btn.textContent='✓ コピー済み — 右ターミナルで Cmd+V / Ctrl+V';
+      btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},2000);
+    }catch(e){console.error(e);}
+  });
+});
+
+document.querySelectorAll('[data-copy-ssh]').forEach(btn=>{
+  btn.addEventListener('click',async()=>{
+    const cmd=document.getElementById('sshCmd');
+    if(!cmd)return;
+    try{
+      await navigator.clipboard.writeText(cmd.textContent.trim());
+      btn.textContent='✓';
+      btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent='📋';btn.classList.remove('copied');},1500);
+    }catch(e){console.error(e);}
+  });
+});
+
+document.querySelectorAll('[data-modal]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const m=document.getElementById('modal-'+b.dataset.modal);
+    if(m)m.classList.add('open');
+  });
+});
+document.querySelectorAll('[data-close]').forEach(b=>{
+  b.addEventListener('click',()=>b.closest('.modal-backdrop').classList.remove('open'));
+});
+document.querySelectorAll('.modal-backdrop').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')document.querySelectorAll('.modal-backdrop.open').forEach(m=>m.classList.remove('open'));
+});
+
+const checklistItems=document.querySelectorAll('.checklist-item input');
+const checklistProgress=document.getElementById('checklistProgress');
+const progressFill=document.getElementById('progressFill');
+const progressText=document.getElementById('progressText');
+function updateProgress(){
+  const done=Array.from(checklistItems).filter(c=>c.checked).length;
+  const total=checklistItems.length;
+  const pct=Math.round((done/total)*100);
+  if(checklistProgress){checklistProgress.textContent=done+' / '+total;checklistProgress.classList.toggle('done',done===total);}
+  if(progressFill)progressFill.style.width=pct+'%';
+  if(progressText){progressText.textContent=done+' / '+total;progressText.style.color=done===total?'var(--green-text)':'var(--muted)';}
+}
+checklistItems.forEach(c=>{
+  c.addEventListener('change',()=>{c.closest('.checklist-item').classList.toggle('done',c.checked);updateProgress();});
+});
+</script>
+
+</body>
+</html>
