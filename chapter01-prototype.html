@@ -4,230 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chapter 1: 初回ログインと bash プロンプトの読み方 — infra-study.org</title>
+<link rel="stylesheet" href="chapter.css">
 <style>
-/* ── tokens (Top.html の tokens.css から抜粋・インライン) ── */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
-:root{
-  --bg:#0d1117; --bg2:#161b22; --bg3:#1c2230; --border:#2a3441;
-  --text:#e2eaf3; --text-strong:#e6edf3; --muted:#9aacbc; --muted-dim:#3a4a5c;
-  --accent:#58a6ff; --green:#3fb950; --amber:#d29922; --purple:#bc8cff; --coral:#f78166; --red:#f85149;
-  --accent-bg:#1c2d3d; --accent-bg-hi:#1e3550; --accent-border:#2a4060; --accent-text:#8ecbff;
-  --green-bg:#1c2616; --green-border:#2a4020; --green-text:#6fd672;
-  --amber-bg:#1c1a0d; --amber-border:#3a3010;
-  --purple-bg:#1c1830; --purple-border:#3a2860; --purple-text:#c4b5fd;
-  --coral-bg:#1c0e0a; --coral-border:#3a1a10;
-  --font-sans:'Noto Sans JP',-apple-system,BlinkMacSystemFont,sans-serif;
-  --font-mono:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-weight:300;font-size:14px;line-height:1.7}
-a{color:var(--accent);text-decoration:none}
-a:hover{text-decoration:underline}
-strong{color:var(--text-strong);font-weight:500}
-code{font-family:var(--font-mono);font-size:12px;background:var(--bg);border:1px solid var(--border);padding:1px 5px;border-radius:4px;color:var(--purple)}
-button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-ul{list-style:none}
-
-/* ── Header ── */
-.site-header{position:sticky;top:0;z-index:50;background:rgba(13,17,23,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
-.header-inner{max-width:min(96vw,1800px);margin:0 auto;height:60px;padding:0 24px;display:flex;align-items:center;gap:32px}
-.brand{display:flex;align-items:center;gap:10px}
-.brand-mark{width:28px;height:28px;border-radius:6px;background:var(--accent-bg);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:600;color:var(--accent);font-size:13px}
-.brand-text{display:flex;flex-direction:column;line-height:1.15}
-.brand-name{font-size:13px;color:var(--text-strong);font-weight:500}
-.brand-domain{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
-.crumb{font-size:13px;color:var(--muted)}
-.crumb .sep{color:var(--muted-dim);margin:0 6px}
-.crumb .now{color:var(--text-strong)}
-.badge-free{display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--green-text);background:var(--green-bg);border:1px solid var(--green-border);padding:2px 8px;border-radius:99px;margin-right:8px}
-.nav-toc{margin-left:auto;font-size:13px;padding:8px 14px;border-radius:6px;background:transparent;border:1px solid var(--border);color:var(--muted);font-weight:400;display:inline-flex;align-items:center;gap:6px}
-.nav-toc:hover{background:var(--bg2);color:var(--text-strong);border-color:var(--accent-border)}
-.nav-user{margin-left:14px;font-size:12px;color:var(--muted);font-family:var(--font-mono);display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:99px;background:var(--bg2);border:1px solid var(--border)}
-.nav-user .avatar{width:18px;height:18px;border-radius:50%;background:var(--accent);color:var(--bg);font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:600}
-
-/* ── Chapter Meta Bar ── */
-.meta-bar{position:sticky;top:60px;z-index:49;border-bottom:1px solid var(--border);background:rgba(22,27,34,0.92);backdrop-filter:blur(8px)}
-.meta-inner{max-width:min(96vw,1800px);margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:18px;font-size:13px}
-.progress{display:flex;align-items:center;gap:12px;min-width:280px}
-.progress-label{font-family:var(--font-mono);font-size:13px;color:var(--accent);letter-spacing:0.04em;font-weight:600;white-space:nowrap}
-.progress-bar{flex:1;height:6px;background:var(--bg3);border-radius:99px;overflow:hidden;border:1px solid var(--border);min-width:120px}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--green) 0%,var(--accent) 100%);border-radius:99px;transition:width 0.3s ease}
-.progress-text{font-family:var(--font-mono);font-size:12px;color:var(--muted);white-space:nowrap}
-.meta-time{color:var(--muted);font-size:13px}
-.meta-progress{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--muted)}
-.meta-progress input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent)}
-
-/* ── 2-pane layout ── */
-.pane-wrap{max-width:min(96vw,1800px);margin:0 auto;display:grid;grid-template-columns:60% 40%;min-height:calc(100vh - 60px - 48px)}
-.content-pane{padding:32px 28px 40px;border-right:1px solid var(--border);overflow-y:auto}
-.terminal-pane{background:var(--bg2);padding:12px 14px;display:flex;flex-direction:column;gap:10px;position:sticky;top:108px;height:calc(100vh - 108px - 60px);align-self:start}
-
-/* ── content ── */
-.content-pane h1{font-size:26px;font-weight:500;color:var(--text-strong);line-height:1.3;margin-bottom:18px}
-.content-pane h2{font-size:20px;font-weight:500;color:var(--text-strong);margin:36px 0 14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.content-pane h3{font-size:16px;font-weight:500;color:var(--text-strong);margin:24px 0 10px}
-.content-pane p{margin:10px 0;line-height:1.8}
-.content-pane ul.bullets{padding-left:0;margin:10px 0}
-.content-pane ul.bullets li{padding-left:18px;position:relative;margin:6px 0;line-height:1.8}
-.content-pane ul.bullets li::before{content:'▸';position:absolute;left:0;color:var(--accent)}
-
-.eyebrow{font-size:12px;letter-spacing:0.12em;color:var(--accent);text-transform:uppercase;font-family:var(--font-mono);font-weight:600;display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.eyebrow::after{content:'';flex:1;height:1px;background:var(--border)}
-.lead{font-size:15px;color:var(--muted);line-height:1.95;margin:14px 0 22px}
-.lead strong{color:var(--text)}
-.callout-key{margin:18px 0;padding:12px 16px;background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;color:var(--text-strong)}
-
-/* meta table */
-table.meta-table{width:100%;border-collapse:collapse;margin:14px 0;background:var(--bg2);border-radius:8px;overflow:hidden;font-size:13px}
-table.meta-table th,table.meta-table td{padding:8px 14px;text-align:left;border-bottom:1px solid var(--border)}
-table.meta-table th{color:var(--muted);font-weight:400;width:130px;background:var(--bg3)}
-table.meta-table tr:last-child th,table.meta-table tr:last-child td{border-bottom:none}
-
-/* ASCII diagram block */
+/* Ch1 固有: ASCII 図と decomp テーブル */
 pre.ascii{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:var(--font-mono);font-size:12px;line-height:1.6;color:var(--muted);overflow-x:auto;margin:16px 0}
-
-/* prompt-decompose table */
 table.decomp{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
 table.decomp th,table.decomp td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:left}
 table.decomp th{color:var(--muted);font-weight:500;background:var(--bg2)}
 table.decomp code{font-size:12px}
-
-/* code block w/ copy */
-.codeblock{position:relative;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin:14px 0;overflow:hidden}
-.codeblock-head{background:var(--bg3);padding:6px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
-.codeblock pre{padding:14px 16px;font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--text);overflow-x:auto}
-.codeblock pre .comment{color:var(--muted)}
-.codeblock pre .prompt{color:var(--green)}
-.codeblock pre .kw{color:var(--purple)}
-.copy-btn{font-family:var(--font-mono);font-size:11px;color:var(--accent);padding:3px 10px;border-radius:4px;border:1px solid var(--accent-border);background:var(--accent-bg)}
-.copy-btn:hover{background:var(--accent-bg-hi)}
-.copy-btn.copied{color:var(--green);border-color:var(--green-border);background:var(--green-bg)}
-
-/* hint accordion */
-.hint{margin:8px 0;border:1px solid var(--border);border-radius:8px;background:var(--bg2);overflow:hidden}
-.hint summary{cursor:pointer;padding:10px 14px;list-style:none;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-strong)}
-.hint summary::-webkit-details-marker{display:none}
-.hint summary::before{content:'▸';color:var(--accent);transition:transform 0.15s}
-.hint[open] summary::before{transform:rotate(90deg)}
-.hint .hint-body{padding:0 14px 14px 32px;color:var(--text);line-height:1.8;font-size:13px;border-top:1px solid var(--border);padding-top:12px;margin-top:0}
-.hint.stage1 summary::after{content:'1段';margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--accent);background:var(--accent-bg);padding:2px 8px;border-radius:99px}
-.hint.stage2 summary::after{content:'2段';margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--purple);background:var(--purple-bg);padding:2px 8px;border-radius:99px}
-.hint.answer summary::after{content:'答え';margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--green);background:var(--green-bg);padding:2px 8px;border-radius:99px}
-
-/* fail-safe block */
-.fail-safe{margin:18px 0;padding:14px 18px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px}
-.fail-safe-title{color:var(--green-text);font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-
-/* AI chat mock */
-.ai-chat-mock{margin:14px 0 22px;border:1px dashed var(--purple-border);border-radius:10px;background:var(--purple-bg);overflow:hidden}
-.ai-chat-head{padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--purple-border);background:rgba(28,24,48,0.5)}
-.ai-badge{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--purple-text);padding:3px 8px;border-radius:99px;background:rgba(188,140,255,0.15);border:1px solid var(--purple-border)}
-.ai-chat-title{font-size:13px;color:var(--text-strong);font-weight:500}
-.ai-chat-body{padding:14px 16px;font-size:13px;line-height:1.7;color:var(--muted)}
-.ai-chat-body p{margin:0 0 12px;color:var(--text)}
-.ai-chat-input-mock{display:flex;gap:8px;margin:8px 0 6px}
-.ai-chat-input-mock input{flex:1;padding:8px 12px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--muted-dim);font-family:var(--font-sans);font-size:13px}
-.ai-chat-input-mock input:disabled{cursor:not-allowed}
-.ai-send-btn{padding:8px 14px;border-radius:6px;background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text);font-size:12px;cursor:not-allowed;opacity:0.6}
-.ai-chat-meta{font-size:11px;color:var(--muted-dim);font-family:var(--font-mono)}
-
-/* quiz */
-.quiz{margin:18px 0;padding:16px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:10px}
-.quiz-title{font-size:13px;color:var(--accent);margin-bottom:6px;font-family:var(--font-mono);letter-spacing:0.04em}
-.quiz-q{font-size:14px;color:var(--text-strong);margin-bottom:10px;line-height:1.7}
-.quiz-btn{margin-top:10px;padding:8px 16px;border-radius:6px;background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent);font-size:13px;font-weight:500}
-.quiz-btn:hover{background:var(--accent-bg-hi)}
-
-/* footer nav — fixed for always-visible chapter navigation */
-.chapter-footer{position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(22,27,34,0.96);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px}
-body{padding-bottom:64px}
-.foot-btn{font-size:13px;padding:8px 16px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text)}
-.foot-btn:hover{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-border)}
-.foot-btn.complete{margin:0 auto;background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);font-weight:500}
-
-/* ── Terminal pane ── */
-.term-head{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-family:var(--font-mono);flex-wrap:wrap}
-.term-head .label{color:var(--text-strong);font-size:13px}
-.term-head .server-status{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-family:var(--font-mono);padding:3px 9px;border-radius:99px;background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber-text)}
-.term-head .server-status .status-dot{width:6px;height:6px;border-radius:50%;background:var(--amber)}
-.term-head .server-status.up{background:var(--green-bg);border-color:var(--green-border);color:var(--green-text)}
-.term-head .server-status.up .status-dot{background:var(--green)}
-
-/* connect cards (ハイブリッド接続選択) */
-.connect-stack{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0}
-.connect-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;transition:border-color 0.2s ease}
-.connect-card:hover{border-color:var(--accent-border)}
-.connect-card.option-a{border-left:3px solid var(--accent)}
-.connect-card.option-b{border-left:3px solid var(--purple)}
-.connect-card-head{display:flex;align-items:center;gap:9px;margin-bottom:10px;flex-wrap:wrap}
-.connect-card-badge{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.06em;padding:3px 9px;border-radius:99px;text-transform:uppercase}
-.connect-card.option-a .connect-card-badge{background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent)}
-.connect-card.option-b .connect-card-badge{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text)}
-.connect-card-title{font-size:15px;color:var(--text-strong);font-weight:500}
-.connect-card-desc{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px}
-.connect-card-desc strong{color:var(--text-strong);font-weight:600}
-.connect-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:11px 16px;border-radius:8px;font-size:13.5px;font-weight:500;font-family:var(--font-sans);cursor:pointer;text-decoration:none;transition:background 0.15s}
-.connect-btn .arr{font-family:var(--font-mono);opacity:0.7}
-.connect-card.option-a .connect-btn{background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent-text)}
-.connect-card.option-a .connect-btn:hover{background:var(--accent-bg-hi);text-decoration:none}
-.connect-card.option-b .connect-btn{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text)}
-.connect-card.option-b .connect-btn:hover{background:rgba(188,140,255,0.18);text-decoration:none}
-.connect-ssh-cmd{margin-top:10px;background:#090d13;border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:var(--font-mono);font-size:12.5px;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:10px}
-.connect-ssh-cmd code{background:transparent;border:0;padding:0;color:var(--green-text);font-size:12.5px;word-break:break-all}
-.connect-ssh-cmd .mini-copy{font-family:var(--font-mono);font-size:11px;color:var(--accent);padding:4px 9px;border-radius:4px;border:1px solid var(--accent-border);background:var(--accent-bg);cursor:pointer;flex-shrink:0}
-.connect-ssh-cmd .mini-copy.copied{color:var(--green-text);border-color:var(--green-border);background:var(--green-bg)}
-.connect-card-meta{font-size:11.5px;color:var(--muted);margin-top:8px;font-family:var(--font-mono);letter-spacing:0.02em}
-.connect-pending{font-size:11.5px;color:var(--amber-text);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:99px;padding:3px 10px;font-family:var(--font-mono);display:inline-block;margin-top:8px}
-.term-controls{display:flex;gap:6px;font-size:11px}
-.term-ctl{padding:4px 10px;border-radius:4px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-family:var(--font-mono)}
-.term-ctl:hover{color:var(--text)}
-.term-status{font-size:11px;color:var(--muted);font-family:var(--font-mono);display:flex;align-items:center;gap:6px}
-.term-status .status-dot{width:6px;height:6px;border-radius:50%;background:var(--amber)}
-
-/* checklist */
-.checklist{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px}
-.checklist.prominent{background:var(--accent-bg);border-color:var(--accent-border)}
-.checklist-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.checklist-title{font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;font-family:var(--font-mono)}
-.checklist-progress{font-family:var(--font-mono);font-size:12px;color:var(--accent);font-weight:600}
-.checklist-progress.done{color:var(--green)}
-.checklist-item{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12.5px;color:var(--text);line-height:1.5}
-.checklist-item input{accent-color:var(--green)}
-.checklist-item.done{color:var(--muted);text-decoration:line-through}
-
-/* modal */
-.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)}
-.modal-backdrop.open{display:flex}
-.modal{max-width:560px;width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
-.modal-title{font-size:18px;font-weight:500;color:var(--text-strong);margin-bottom:14px;display:flex;align-items:center;gap:10px}
-.modal-title::before{content:'✓';color:var(--green);font-family:var(--font-mono)}
-.modal-body{font-size:13px;line-height:1.8;color:var(--text)}
-.modal-body ul{list-style:none;padding:0;margin:10px 0}
-.modal-body ul li{padding:4px 0 4px 16px;position:relative}
-.modal-body ul li::before{content:'•';position:absolute;left:0;color:var(--accent)}
-.modal-close{margin-top:18px;padding:8px 18px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:13px;cursor:pointer}
-.modal-close:hover{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-border)}
-
-/* step number badge */
-.step-num{color:var(--accent);font-weight:600;margin-right:6px;font-size:18px;line-height:1;vertical-align:-1px}
-
-/* Objective grid (この章を終えるとできること) */
-.obj-intro{font-size:14.5px;color:var(--text);font-weight:400;line-height:1.85;margin:14px 0 6px}
-.obj-intro strong{color:var(--text-strong);font-weight:600}
-.objective-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0 6px;position:relative}
-.obj-card{position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg3) 100%);border:1px solid var(--border);border-radius:14px;padding:20px 14px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:11px;transition:transform 0.2s ease,border-color 0.2s ease,box-shadow 0.2s ease}
-.obj-card:hover{border-color:var(--accent-border);transform:translateY(-2px);box-shadow:0 6px 24px rgba(88,166,255,0.08)}
-.obj-icon{width:100%;min-height:84px;color:var(--text);background:var(--bg);border:1px solid var(--accent-border);border-radius:8px;padding:9px 11px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:3px;font-family:var(--font-mono);font-size:11.5px;line-height:1.5;letter-spacing:0;text-align:left;overflow:hidden;transition:transform 0.2s ease,border-color 0.2s ease,background 0.2s ease;position:relative}
-.obj-icon::before{content:'';position:absolute;top:0;left:0;right:0;height:14px;background:linear-gradient(180deg,var(--bg3) 0%,transparent 100%);opacity:0.55;pointer-events:none}
-.obj-icon .op-line{display:flex;align-items:center;gap:6px;white-space:nowrap}
+/* Ch1 固有: obj-card のミニ端末プレビュー追加クラス */
 .obj-icon .op-plus{color:var(--green);font-weight:600;width:9px;display:inline-block}
 .obj-icon .op-x{color:var(--coral);font-weight:600;width:9px;display:inline-block}
-.obj-icon .op-arrow{color:var(--accent);font-weight:600;font-size:13px;width:9px;display:inline-block}
-.obj-icon .op-prompt{color:var(--green);font-weight:600}
-.obj-icon .op-cmd{color:var(--purple);font-weight:600}
 .obj-icon .op-dir{color:var(--accent-text)}
-.obj-icon .op-file{color:var(--text-strong)}
-.obj-icon .op-hint{color:var(--muted);font-size:10px;letter-spacing:0.04em;text-transform:uppercase}
 .obj-icon .op-strike{text-decoration:line-through;text-decoration-color:var(--coral);color:var(--muted)}
 .obj-icon .op-bar{display:inline-block;height:4px;background:var(--muted-dim);border-radius:99px;flex:none}
 .obj-icon .op-bar.w-full{width:78px}
@@ -236,29 +24,9 @@ body{padding-bottom:64px}
 .obj-icon .op-cursor{display:inline-block;width:6px;height:11px;background:var(--accent);vertical-align:-2px;margin-left:2px;animation:obj-blink 1.1s steps(2,end) infinite}
 @keyframes obj-blink{50%{opacity:0}}
 .obj-card.danger .obj-icon{border-color:var(--coral-border)}
-.obj-card:hover .obj-icon{border-color:var(--accent);background:#0a0f16}
 .obj-card.danger:hover .obj-icon{border-color:var(--coral)}
 .obj-card.danger:hover{border-color:var(--coral-border);box-shadow:0 6px 24px rgba(247,129,102,0.08)}
-.obj-verb{font-size:19px;color:var(--text-strong);font-weight:500;letter-spacing:0.08em;margin:0;line-height:1.2}
-.obj-desc{font-size:13.5px;color:var(--text);font-weight:400;line-height:1.65;margin:0;min-height:46px;display:flex;align-items:center;justify-content:center}
-.obj-cmds{margin-top:auto;font-family:var(--font-mono);font-size:13.5px;font-weight:600;letter-spacing:0.08em;color:var(--text-strong);background:var(--accent-bg-hi);border:1px solid var(--accent);border-radius:99px;padding:7px 16px;white-space:nowrap}
 .obj-card.danger .obj-cmds{color:var(--text-strong);background:rgba(247,129,102,0.18);border-color:var(--coral)}
-.obj-card:not(:last-child)::after{content:'';position:absolute;right:-10px;top:50%;width:10px;height:10px;transform:translateY(-50%) rotate(45deg);border-top:2px solid var(--accent);border-right:2px solid var(--accent);z-index:2}
-@media (max-width:1100px){
-  .objective-grid{grid-template-columns:repeat(2,1fr);gap:14px 18px}
-  .obj-card:nth-child(2)::after{display:none}
-}
-@media (max-width:600px){
-  .objective-grid{grid-template-columns:1fr}
-  .obj-card::after{display:none}
-}
-
-/* responsive — minimal: stack at <1100px (タブレット相当の検証用) */
-@media (max-width:1100px){
-  .pane-wrap{grid-template-columns:1fr}
-  .content-pane{border-right:none}
-  .terminal-pane{position:static;height:auto;min-height:340px;border-top:1px solid var(--border)}
-}
 </style>
 </head>
 <body>
@@ -303,7 +71,11 @@ body{padding-bottom:64px}
   <!-- ── Content pane ── -->
   <main class="content-pane">
 
-    <h1>初回ログインと bash プロンプトの読み方</h1>
+    <div class="chapter-hero">
+      <div class="chapter-eyebrow"><span class="chip">Part 1</span><span>Chapter 01</span><span class="sep">/</span><span>Linux 基礎</span></div>
+      <h1>初回ログインと bash プロンプトの読み方</h1>
+      <p class="chapter-subtitle">SSH の仕組み、踏み台 → 演習用サーバの 2 段接続、プロンプトの読み方 ── Linux サーバへの「会いに行き方」を、自分の手でできるようになります。</p>
+    </div>
 
     <table class="meta-table">
       <tr><th>所要時間</th><td>約 20 分</td></tr>
@@ -312,7 +84,7 @@ body{padding-bottom:64px}
       <tr><th>関連章</th><td>前: なし / 後: Chapter 2「ファイルシステム階層」</td></tr>
     </table>
 
-    <h2>ようこそ、Linux の世界へ</h2>
+    <h2 data-num="01" data-label="Overview">ようこそ、Linux の世界へ</h2>
     <p>「Linux を学んでみたい。でも、どこから始めればいいか分からない」── そんな気持ちでここに来た方に、まず伝えたいことがあります。</p>
     <p class="callout-key"><strong>最初の一歩は、Linux サーバに「会いに行く」ことです。</strong></p>
     <p>サーバは普段、データセンターの暗い部屋でひっそり動いています。ディスプレイを覗き込む人はほとんどいません。代わりに、ネットワーク越しに、文字だけで対話します。</p>
@@ -325,7 +97,7 @@ body{padding-bottom:64px}
     <p>右の演習画面でいま開いているターミナルは、<strong>踏み台 <code>workstation01</code> のもの</strong>です。ブラウザの中に workstation01 のデスクトップが映し出されている、と思ってください。あなたはすでに <code>alice</code> というユーザーで workstation01 にログインしています。</p>
     <p>これから、その踏み台から<strong>もう一段奥</strong>にある演習用サーバ <code>learner01</code> に SSH で入ります。20 分後には、踏み台 → learner01 と 2 段つないで、「自分は今、誰として、どこに居るのか」を確認できるようになっているはずです。</p>
 
-    <h2>この章を終えるとできること</h2>
+    <h2 data-num="02" data-label="Objectives">この章を終えるとできること</h2>
     <p class="obj-intro">SSH の仕組みを知り、<strong>4 つの操作</strong>で「入る・読む・確かめる・出る」が自分の手でできるようになります。</p>
 
     <div class="objective-grid">
@@ -374,7 +146,7 @@ body{padding-bottom:64px}
       </div>
     </div>
 
-    <h2>概念説明</h2>
+    <h2 data-num="03" data-label="Concepts">概念説明</h2>
 
     <h3>1. SSH ってなに？</h3>
     <p>SSH は、ひとことで言うと <strong>「ネットワーク越しに、別のコンピュータの中で文字をやり取りする」仕組み</strong>です。イメージとしてはこんな感じです：</p>
@@ -408,43 +180,49 @@ body{padding-bottom:64px}
     <p>つまり <code>student@learner01:~$</code> を声に出すと、<strong>「student として、learner01 で、ホームに居て、コマンドを待ってます」</strong> という意味になります。</p>
     <p>慣れてくると、プロンプトを一目見るだけで「自分は今どのサーバの・誰として・どこに居るか」が瞬時にわかります。複数のサーバに同時に入って作業するようになると、<strong>この習慣が事故を防ぐ最強のお守り</strong>になります。</p>
 
-    <h2>試してみよう：踏み台から演習用サーバへ「会いに行く」</h2>
+    <h2 data-num="04" data-label="Hands-on">試してみよう：踏み台から演習用サーバへ「会いに行く」</h2>
     <p>ここからが本番です。<strong>右の演習ターミナル</strong>（踏み台 <code>workstation01</code> のもの）を使って、もう一段奥の Linux サーバに入ってみましょう。</p>
 
-    <h3>① 踏み台から learner01 に SSH する</h3>
-    <p>右の <code>alice@workstation01:~$</code> プロンプトで、まずはこのコマンドを打ってみてください：</p>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash · ログインコマンド</span>
-        <button class="copy-btn" data-copy="ssh student@192.168.1.203">📋 コピー → 右ターミナルで Cmd+V / Ctrl+V</button>
+    <section class="step-section step-start" data-step="1" data-total="3">
+      <h3 class="step-title">踏み台から learner01 に SSH する</h3>
+      <p>右の <code>alice@workstation01:~$</code> プロンプトで、まずはこのコマンドを打ってみてください：</p>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash · ログインコマンド</span>
+          <button class="copy-btn" data-copy="ssh student@192.168.1.203">📋 コピー → 右ターミナルで Cmd+V / Ctrl+V</button>
+        </div>
+        <pre><span class="kw">ssh</span> student@192.168.1.203</pre>
       </div>
-      <pre><span class="kw">ssh</span> student@192.168.1.203</pre>
-    </div>
-    <p>初めて接続するときは <code>Are you sure you want to continue connecting?</code> と聞かれます。学習環境なので <code>yes</code> と打って Enter。続いてパスワードを聞かれるので、講師から共有された値を入力してください（タイプ中の文字は画面に出ませんが、ちゃんと入力されています）。</p>
+      <p>初めて接続するときは <code>Are you sure you want to continue connecting?</code> と聞かれます。学習環境なので <code>yes</code> と打って Enter。続いてパスワードを聞かれるので、講師から共有された値を入力してください（タイプ中の文字は画面に出ませんが、ちゃんと入力されています）。</p>
+    </section>
 
-    <h3>② 現在地を確認する 5 つのコマンド</h3>
-    <p>ログインに成功すると、プロンプトが <code>alice@workstation01:~$</code> から <code>student@learner01:~$</code> に変わります。この瞬間、<strong>あなたは踏み台から一段奥の learner01 の中に居ます</strong>。プロンプトが変わったことが「現在地が変わった」サインです。</p>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash · 現在地を 5 つの角度で確認</span>
-        <button class="copy-btn" data-copy="whoami&#10;hostname&#10;pwd&#10;id&#10;date">📋 コピー → 右ターミナルで Cmd+V / Ctrl+V</button>
-      </div>
-      <pre><span class="kw">whoami</span>     <span class="comment"># 自分が誰として入っているか</span>
+    <section class="step-section" data-step="2" data-total="3">
+      <h3 class="step-title">現在地を確認する 5 つのコマンド</h3>
+      <p>ログインに成功すると、プロンプトが <code>alice@workstation01:~$</code> から <code>student@learner01:~$</code> に変わります。この瞬間、<strong>あなたは踏み台から一段奥の learner01 の中に居ます</strong>。プロンプトが変わったことが「現在地が変わった」サインです。</p>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash · 現在地を 5 つの角度で確認</span>
+          <button class="copy-btn" data-copy="whoami&#10;hostname&#10;pwd&#10;id&#10;date">📋 コピー → 右ターミナルで Cmd+V / Ctrl+V</button>
+        </div>
+        <pre><span class="kw">whoami</span>     <span class="comment"># 自分が誰として入っているか</span>
 <span class="kw">hostname</span>   <span class="comment"># 接続先のホスト名</span>
 <span class="kw">pwd</span>        <span class="comment"># 現在のディレクトリ（絶対パス）</span>
 <span class="kw">id</span>         <span class="comment"># ユーザー番号と所属グループ</span>
 <span class="kw">date</span>       <span class="comment"># サーバ側の現在時刻</span></pre>
-    </div>
-
-    <h3>③ ログアウトして踏み台に戻る</h3>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash · ログアウト</span>
-        <button class="copy-btn" data-copy="exit">📋 コピー → 右ターミナルで Cmd+V / Ctrl+V</button>
       </div>
-      <pre><span class="kw">exit</span></pre>
-    </div>
-    <p>プロンプトが <code>alice@workstation01:~$</code> に戻れば成功です。<strong>踏み台に戻ってきた</strong>ということ。learner01 と踏み台、2 つの場所を行き来できる感覚を覚えておいてください。</p>
+    </section>
+
+    <section class="step-section" data-step="3" data-total="3">
+      <h3 class="step-title">ログアウトして踏み台に戻る</h3>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash · ログアウト</span>
+          <button class="copy-btn" data-copy="exit">📋 コピー → 右ターミナルで Cmd+V / Ctrl+V</button>
+        </div>
+        <pre><span class="kw">exit</span></pre>
+      </div>
+      <p>プロンプトが <code>alice@workstation01:~$</code> に戻れば成功です。<strong>踏み台に戻ってきた</strong>ということ。learner01 と踏み台、2 つの場所を行き来できる感覚を覚えておいてください。</p>
+    </section>
 
     <div class="fail-safe">
       <div class="fail-safe-title">🛟 失敗しても大丈夫</div>
@@ -457,7 +235,7 @@ body{padding-bottom:64px}
       <p style="font-size:12px;color:var(--green-text);margin-top:10px"><strong>この章は「読み取り系」のコマンドしか使いません。</strong>何度でも安心してやり直してください。</p>
     </div>
 
-    <h2>詰まったら</h2>
+    <h2 data-num="05" data-label="Troubleshooting">詰まったら</h2>
     <p>このサイトでは「<strong>段階ヒント</strong>」と「<strong>AI に相談</strong>」の 2 つを併用できます。</p>
     <ul class="bullets" style="margin-bottom:14px">
       <li><strong>段階ヒント</strong>: 章を書いた人が用意した、定番の詰まりポイントへの段階開示。1 段 → 2 段 → 答え、と少しずつ開けます</li>
@@ -494,7 +272,7 @@ body{padding-bottom:64px}
       </div>
     </details>
 
-    <h3>🤖 AI に相談（v2 公開予定）</h3>
+    <h3>AI に相談（v2 公開予定）</h3>
     <div class="ai-chat-mock">
       <div class="ai-chat-head">
         <span class="ai-badge">準備中</span>
@@ -510,7 +288,7 @@ body{padding-bottom:64px}
       </div>
     </div>
 
-    <h2>修了確認</h2>
+    <h2 data-num="06" data-label="Checkpoint">修了確認</h2>
     <p>学んだことが身についたか、2 問だけ確認してみましょう。</p>
 
     <div class="quiz">
@@ -526,7 +304,7 @@ body{padding-bottom:64px}
       <button class="quiz-btn" data-modal="quiz2">考えました → 解答を見る</button>
     </div>
 
-    <h2>次の章へ</h2>
+    <h2 data-num="07" data-label="What's next">次の章へ</h2>
     <p>次は <strong>Chapter 2「ファイルシステム階層」</strong> です。ログインしたあなたが次に直面するのは、「<strong>このサーバの中、ファイルがどう並んでいるんだ？</strong>」という疑問です。<code>/</code>、<code>/home</code>、<code>/etc</code>、<code>/var</code>、<code>/usr</code>、<code>/tmp</code> ── 似たようなディレクトリ名が並んでいるけれど、それぞれに<strong>意味と歴史</strong>があります。</p>
     <p>learner01 にはこのまま入ったままで構いません。あるいは一度 <code>exit</code> で踏み台に戻り、次章の冒頭で再度 <code>ssh student@192.168.1.203</code> してもらっても大丈夫です。<strong>踏み台と learner01 を行き来する感覚</strong>を身につけるには、後者もおすすめです。</p>
 
@@ -535,69 +313,30 @@ body{padding-bottom:64px}
   <!-- ── Terminal pane (ハイブリッド接続 / D-017) ── -->
   <aside class="terminal-pane">
     <div class="term-head">
-      <span class="label">⌨ 演習サーバへ接続する</span>
-      <span class="server-status" title="サーバの稼働状況（手動更新）"><span class="status-dot"></span>サーバ確認中</span>
+      <span class="label">📊 演習を進める</span>
+      <span class="server-status" title="演習サーバの稼働状況（手動更新）"><span class="status-dot"></span>サーバ確認中</span>
     </div>
 
-    <div class="connect-stack">
-
-      <!-- オプション A: Guacamole ブラウザ -->
-      <div class="connect-card option-a">
-        <div class="connect-card-head">
-          <span class="connect-card-badge">Option A</span>
-          <span class="connect-card-title">🌐 ブラウザで開く（Guacamole）</span>
-        </div>
-        <div class="connect-card-desc">
-          <strong>環境構築不要・すぐ開始</strong>できます。新しいタブでブラウザ内ターミナルが起動します。初回は <strong>メール OTP 認証</strong> 画面が出ます。
-        </div>
-        <a href="https://lab.infra-study.org/guacamole/" target="_blank" rel="noopener" class="connect-btn">
-          <span>🚀 別タブで Guacamole を開く</span>
-          <span class="arr">↗</span>
-        </a>
-        <div class="connect-card-meta">lab.infra-study.org / workstation01 経由</div>
-      </div>
-
-      <!-- オプション B: 手元 PC から直接 SSH -->
-      <div class="connect-card option-b">
-        <div class="connect-card-head">
-          <span class="connect-card-badge">Option B</span>
-          <span class="connect-card-title">💻 手元 PC から SSH</span>
-        </div>
-        <div class="connect-card-desc">
-          <strong>本物のサーバ管理者体験</strong>。Mac / Linux は標準の <code>ssh</code>、Windows は Teraterm / OpenSSH / PuTTY。<strong>SSH 鍵認証</strong>で接続します。
-        </div>
-        <div class="connect-ssh-cmd">
-          <code id="sshCmd">ssh -i ~/.ssh/infra_study alice@ssh.infra-study.org</code>
-          <button class="mini-copy" data-copy-ssh>📋</button>
-        </div>
-        <div class="connect-card-meta">Cloudflare Tunnel TCP 経由 / 鍵認証のみ</div>
-        <span class="connect-pending">⏳ Phase B 準備中（受講者鍵配布フロー設計中）</span>
-      </div>
-
-      <!-- 接続後の流れ -->
-      <div class="connect-card" style="border-left:3px solid var(--green)">
-        <div class="connect-card-head">
-          <span class="connect-card-badge" style="background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text)">手順</span>
-          <span class="connect-card-title">📋 接続後の流れ</span>
-        </div>
-        <div class="connect-card-desc" style="margin-bottom:0">
-          <strong>1.</strong> 上の A または B で <code>alice@workstation01:~$</code> に到達<br>
-          <strong>2.</strong> 踏み台から <code>ssh student@learner01</code> でジャンプ<br>
-          <strong>3.</strong> <code>student@learner01:~$</code> で演習開始
-        </div>
-      </div>
-
-    </div>
+    <a href="connect.html" class="connect-banner" title="演習サーバへの接続方法（オンボーディング）">
+      <span class="banner-icon">⌨</span>
+      <span class="banner-text">演習サーバへの接続方法
+        <span class="banner-sub">Guacamole / SSH / 接続後フロー</span>
+      </span>
+      <span class="banner-arr">→</span>
+    </a>
 
     <div class="checklist prominent">
       <div class="checklist-head">
         <span class="checklist-title">📊 演習チェック</span>
-        <span class="checklist-progress">0 / 3</span>
+        <span class="checklist-progress" id="checklistProgress">0 / 3</span>
       </div>
-      <label class="checklist-item"><input type="checkbox"> ssh コマンドを実行した</label>
-      <label class="checklist-item"><input type="checkbox"> プロンプト記号を読めた</label>
-      <label class="checklist-item"><input type="checkbox"> whoami / pwd / exit を試した</label>
+      <label class="checklist-item"><input type="checkbox"> <code>ssh</code> コマンドを実行した</label>
+      <label class="checklist-item"><input type="checkbox"> <code>$</code> プロンプト記号を読めた</label>
+      <label class="checklist-item"><input type="checkbox"> <code>whoami</code> / <code>pwd</code> / <code>exit</code> を試した</label>
     </div>
+
+    <!-- Part 別チートシートスロット (Part 2+ の章で .cheat-card を追加 / Part 1 は空のため非表示) -->
+    <div class="cheat-slot"></div>
   </aside>
 
 </div>
@@ -638,78 +377,7 @@ body{padding-bottom:64px}
   </div>
 </div>
 
-<script>
-// Copy button
-document.querySelectorAll('.copy-btn').forEach(btn=>{
-  btn.addEventListener('click',async()=>{
-    const text=btn.dataset.copy.replace(/&#10;/g,'\n');
-    try{
-      await navigator.clipboard.writeText(text);
-      const orig=btn.textContent;
-      btn.textContent='✓ コピー済み — 右ターミナルで Cmd+V / Ctrl+V';
-      btn.classList.add('copied');
-      setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},2000);
-    }catch(e){console.error(e);}
-  });
-});
-
-// SSH command mini copy
-document.querySelectorAll('[data-copy-ssh]').forEach(btn=>{
-  btn.addEventListener('click',async()=>{
-    const cmd=document.getElementById('sshCmd');
-    if(!cmd)return;
-    try{
-      await navigator.clipboard.writeText(cmd.textContent.trim());
-      btn.textContent='✓';
-      btn.classList.add('copied');
-      setTimeout(()=>{btn.textContent='📋';btn.classList.remove('copied');},1500);
-    }catch(e){console.error(e);}
-  });
-});
-
-// Modals
-document.querySelectorAll('[data-modal]').forEach(b=>{
-  b.addEventListener('click',()=>{
-    const m=document.getElementById('modal-'+b.dataset.modal);
-    if(m)m.classList.add('open');
-  });
-});
-document.querySelectorAll('[data-close]').forEach(b=>{
-  b.addEventListener('click',()=>b.closest('.modal-backdrop').classList.remove('open'));
-});
-document.querySelectorAll('.modal-backdrop').forEach(m=>{
-  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
-});
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape')document.querySelectorAll('.modal-backdrop.open').forEach(m=>m.classList.remove('open'));
-});
-
-// Checklist line-through + progress counter (連動: 章メタバーの進捗バーも同時更新)
-const checklistItems=document.querySelectorAll('.checklist-item input');
-const checklistProgress=document.querySelector('.checklist-progress');
-const progressFill=document.getElementById('progressFill');
-const progressText=document.getElementById('progressText');
-function updateChecklistProgress(){
-  const done=Array.from(checklistItems).filter(c=>c.checked).length;
-  const total=checklistItems.length;
-  const pct=Math.round((done/total)*100);
-  if(checklistProgress){
-    checklistProgress.textContent=done+' / '+total;
-    checklistProgress.classList.toggle('done',done===total);
-  }
-  if(progressFill)progressFill.style.width=pct+'%';
-  if(progressText){
-    progressText.textContent=done+' / '+total;
-    progressText.style.color=done===total?'var(--green-text)':'var(--muted)';
-  }
-}
-checklistItems.forEach(c=>{
-  c.addEventListener('change',()=>{
-    c.closest('.checklist-item').classList.toggle('done',c.checked);
-    updateChecklistProgress();
-  });
-});
-</script>
+<script src="chapter.js"></script>
 
 </body>
 </html>

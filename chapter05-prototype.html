@@ -4,306 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chapter 5: ファイルを書き換える（vim 入門） — infra-study.org</title>
+<link rel="stylesheet" href="chapter.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
-:root{
-  --bg:#0d1117; --bg2:#161b22; --bg3:#1c2230; --border:#2a3441;
-  --text:#e2eaf3; --text-strong:#e6edf3; --muted:#9aacbc; --muted-dim:#3a4a5c;
-  --accent:#58a6ff; --green:#3fb950; --amber:#d29922; --purple:#bc8cff; --coral:#f78166; --red:#f85149;
-  --accent-bg:#1c2d3d; --accent-bg-hi:#1e3550; --accent-border:#2a4060; --accent-text:#8ecbff;
-  --green-bg:#1c2616; --green-border:#2a4020; --green-text:#6fd672;
-  --amber-bg:#1c1a0d; --amber-border:#3a3010; --amber-text:#d4a236;
-  --purple-bg:#1c1830; --purple-border:#3a2860; --purple-text:#c4b5fd;
-  --coral-bg:#1c0e0a; --coral-border:#3a1a10; --coral-text:#f9826c;
-  --font-sans:'Noto Sans JP',-apple-system,BlinkMacSystemFont,sans-serif;
-  --font-mono:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-weight:300;font-size:14px;line-height:1.7}
-a{color:var(--accent);text-decoration:none}
-a:hover{text-decoration:underline}
-strong{color:var(--text-strong);font-weight:500}
-code{font-family:var(--font-mono);font-size:12px;background:var(--bg);border:1px solid var(--border);padding:1px 5px;border-radius:4px;color:var(--purple)}
-button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-ul{list-style:none}
-
-.site-header{position:sticky;top:0;z-index:50;background:rgba(13,17,23,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
-.header-inner{max-width:min(96vw,1800px);margin:0 auto;height:60px;padding:0 24px;display:flex;align-items:center;gap:32px}
-.brand{display:flex;align-items:center;gap:10px}
-.brand-mark{width:28px;height:28px;border-radius:6px;background:var(--accent-bg);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:600;color:var(--accent);font-size:13px}
-.brand-text{display:flex;flex-direction:column;line-height:1.15}
-.brand-name{font-size:13px;color:var(--text-strong);font-weight:500}
-.brand-domain{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
-.crumb{font-size:13px;color:var(--muted)}
-.crumb .sep{color:var(--muted-dim);margin:0 6px}
-.crumb .now{color:var(--text-strong)}
-.badge-free{display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--green-text);background:var(--green-bg);border:1px solid var(--green-border);padding:2px 8px;border-radius:99px;margin-right:8px}
-.nav-toc{margin-left:auto;font-size:13px;padding:8px 14px;border-radius:6px;background:transparent;border:1px solid var(--border);color:var(--muted);font-weight:400;display:inline-flex;align-items:center;gap:6px}
-.nav-toc:hover{background:var(--bg2);color:var(--text-strong);border-color:var(--accent-border)}
-.nav-user{margin-left:14px;font-size:12px;color:var(--muted);font-family:var(--font-mono);display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:99px;background:var(--bg2);border:1px solid var(--border)}
-.nav-user .avatar{width:18px;height:18px;border-radius:50%;background:var(--accent);color:var(--bg);font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:600}
-
-.meta-bar{position:sticky;top:60px;z-index:49;border-bottom:1px solid var(--border);background:rgba(22,27,34,0.92);backdrop-filter:blur(8px)}
-.meta-inner{max-width:min(96vw,1800px);margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:18px;font-size:13px}
-.progress{display:flex;align-items:center;gap:12px;min-width:280px}
-.progress-label{font-family:var(--font-mono);font-size:13px;color:var(--accent);letter-spacing:0.04em;font-weight:600;white-space:nowrap}
-.progress-bar{flex:1;height:6px;background:var(--bg3);border-radius:99px;overflow:hidden;border:1px solid var(--border);min-width:120px}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--green) 0%,var(--accent) 100%);border-radius:99px;transition:width 0.3s ease}
-.progress-text{font-family:var(--font-mono);font-size:12px;color:var(--muted);white-space:nowrap}
-.meta-time{color:var(--muted);font-size:13px}
-.meta-progress{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--muted)}
-.meta-progress input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent)}
-
-.pane-wrap{max-width:min(96vw,1800px);margin:0 auto;display:grid;grid-template-columns:60% 40%;min-height:calc(100vh - 60px - 48px)}
-.content-pane{padding:32px 28px 40px;border-right:1px solid var(--border);overflow-y:auto}
-.terminal-pane{background:var(--bg2);padding:12px 14px;display:flex;flex-direction:column;gap:10px;position:sticky;top:108px;height:calc(100vh - 108px - 60px);align-self:start}
-
-.content-pane h1{font-size:26px;font-weight:500;color:var(--text-strong);line-height:1.3;margin-bottom:18px}
-.content-pane h2{font-size:20px;font-weight:500;color:var(--text-strong);margin:36px 0 14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.content-pane h3{font-size:16px;font-weight:500;color:var(--text-strong);margin:24px 0 10px}
-.content-pane h4{font-size:14px;font-weight:500;color:var(--text-strong);margin:18px 0 8px;letter-spacing:0.02em}
-.content-pane p{margin:10px 0;line-height:1.8}
-.content-pane ul.bullets{padding-left:0;margin:10px 0}
-.content-pane ul.bullets li{padding-left:18px;position:relative;margin:6px 0;line-height:1.8}
-.content-pane ul.bullets li::before{content:'▸';position:absolute;left:0;color:var(--accent)}
-
-.callout-key{margin:18px 0;padding:12px 16px;background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;color:var(--text-strong)}
-.callout-amber{margin:18px 0;padding:12px 16px;background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;color:var(--text-strong)}
-.callout-coral{margin:18px 0;padding:14px 18px;background:var(--coral-bg);border:1px solid var(--coral-border);border-radius:8px;color:var(--text-strong)}
-.callout-coral .coral-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--coral-text);background:rgba(247,129,102,0.12);padding:3px 10px;border-radius:99px;border:1px solid var(--coral-border);margin-bottom:8px}
-
-table.meta-table{width:100%;border-collapse:collapse;margin:14px 0;background:var(--bg2);border-radius:8px;overflow:hidden;font-size:13px}
-table.meta-table th,table.meta-table td{padding:8px 14px;text-align:left;border-bottom:1px solid var(--border)}
-table.meta-table th{color:var(--muted);font-weight:400;width:130px;background:var(--bg3)}
-table.meta-table tr:last-child th,table.meta-table tr:last-child td{border-bottom:none}
-
-table.op-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
-table.op-table th,table.op-table td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
-table.op-table th{color:var(--muted);font-weight:500;background:var(--bg2)}
-table.op-table tr:last-child td{border-bottom:none}
-
-table.dir-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
-table.dir-table th,table.dir-table td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
-table.dir-table th{color:var(--muted);font-weight:500;background:var(--bg2)}
-table.dir-table td:first-child code{font-size:13px}
-table.dir-table tr:last-child td{border-bottom:none}
-
-.codeblock{position:relative;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin:14px 0;overflow:hidden}
-.codeblock-head{background:var(--bg3);padding:6px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
-.codeblock pre{padding:14px 16px;font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--text);overflow-x:auto}
-.codeblock pre .comment{color:var(--muted)}
-.codeblock pre .prompt{color:var(--green)}
-.codeblock pre .kw{color:var(--purple)}
+/* Ch5 固有: vim キー・モード色付け */
 .codeblock pre .key{color:var(--amber);font-weight:600}
 .codeblock pre .mode{color:var(--green-text);font-weight:600}
-.copy-btn{font-family:var(--font-mono);font-size:11px;color:var(--accent);padding:3px 10px;border-radius:4px;border:1px solid var(--accent-border);background:var(--accent-bg)}
-.copy-btn:hover{background:var(--accent-bg-hi)}
-.copy-btn.copied{color:var(--green);border-color:var(--green-border);background:var(--green-bg)}
-
-.hint{margin:8px 0;border:1px solid var(--border);border-radius:8px;background:var(--bg2);overflow:hidden}
-.hint summary{cursor:pointer;padding:10px 14px;list-style:none;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-strong)}
-.hint summary::-webkit-details-marker{display:none}
-.hint summary::before{content:'▸';color:var(--accent);transition:transform 0.15s}
-.hint[open] summary::before{transform:rotate(90deg)}
-.hint .hint-body{padding:0 14px 14px 32px;color:var(--text);line-height:1.8;font-size:13px;border-top:1px solid var(--border);padding-top:12px;margin-top:0}
-.hint.stage1 summary::after{content:'1段';margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--accent);background:var(--accent-bg);padding:2px 8px;border-radius:99px}
-.hint.stage2 summary::after{content:'2段';margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--purple);background:var(--purple-bg);padding:2px 8px;border-radius:99px}
-.hint.answer summary::after{content:'答え';margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--green);background:var(--green-bg);padding:2px 8px;border-radius:99px}
-
-.fail-safe{margin:18px 0;padding:14px 18px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px}
-.fail-safe-title{color:var(--green-text);font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-
-.ai-chat-mock{margin:14px 0 22px;border:1px dashed var(--purple-border);border-radius:10px;background:var(--purple-bg);overflow:hidden}
-.ai-chat-head{padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--purple-border);background:rgba(28,24,48,0.5)}
-.ai-badge{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--purple-text);padding:3px 8px;border-radius:99px;background:rgba(188,140,255,0.15);border:1px solid var(--purple-border)}
-.ai-chat-title{font-size:13px;color:var(--text-strong);font-weight:500}
-.ai-chat-body{padding:14px 16px;font-size:13px;line-height:1.7;color:var(--muted)}
-.ai-chat-body p{margin:0 0 12px;color:var(--text)}
-.ai-chat-input-mock{display:flex;gap:8px;margin:8px 0 6px}
-.ai-chat-input-mock input{flex:1;padding:8px 12px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--muted-dim);font-family:var(--font-sans);font-size:13px}
-.ai-chat-input-mock input:disabled{cursor:not-allowed}
-.ai-send-btn{padding:8px 14px;border-radius:6px;background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text);font-size:12px;cursor:not-allowed;opacity:0.6}
-.ai-chat-meta{font-size:11px;color:var(--muted-dim);font-family:var(--font-mono)}
-
-.quiz{margin:18px 0;padding:16px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:10px}
-.quiz-title{font-size:13px;color:var(--accent);margin-bottom:6px;font-family:var(--font-mono);letter-spacing:0.04em}
-.quiz-q{font-size:14px;color:var(--text-strong);margin-bottom:10px;line-height:1.7}
-.quiz-btn{margin-top:10px;padding:8px 16px;border-radius:6px;background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent);font-size:13px;font-weight:500}
-.quiz-btn:hover{background:var(--accent-bg-hi)}
-
-.chapter-footer{position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(22,27,34,0.96);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px}
-body{padding-bottom:64px}
-.foot-btn{font-size:13px;padding:8px 16px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text)}
-.foot-btn:hover{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-border)}
-.foot-btn.complete{margin:0 auto;background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);font-weight:500}
-
-.term-head{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-family:var(--font-mono);flex-wrap:wrap}
-.term-head .label{color:var(--text-strong);font-size:13px}
-.term-head .server-status{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-family:var(--font-mono);padding:3px 9px;border-radius:99px;background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber-text)}
-.term-head .server-status .status-dot{width:6px;height:6px;border-radius:50%;background:var(--amber)}
-.term-head .server-status.up{background:var(--green-bg);border-color:var(--green-border);color:var(--green-text)}
-.term-head .server-status.up .status-dot{background:var(--green)}
-
-/* connect cards (ハイブリッド接続選択 / D-017) */
-.connect-stack{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0}
-.connect-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;transition:border-color 0.2s ease}
-.connect-card:hover{border-color:var(--accent-border)}
-.connect-card.option-a{border-left:3px solid var(--accent)}
-.connect-card.option-b{border-left:3px solid var(--purple)}
-.connect-card-head{display:flex;align-items:center;gap:9px;margin-bottom:10px;flex-wrap:wrap}
-.connect-card-badge{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.06em;padding:3px 9px;border-radius:99px;text-transform:uppercase}
-.connect-card.option-a .connect-card-badge{background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent)}
-.connect-card.option-b .connect-card-badge{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text)}
-.connect-card-title{font-size:15px;color:var(--text-strong);font-weight:500}
-.connect-card-desc{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px}
-.connect-card-desc strong{color:var(--text-strong);font-weight:600}
-.connect-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:11px 16px;border-radius:8px;font-size:13.5px;font-weight:500;font-family:var(--font-sans);cursor:pointer;text-decoration:none;transition:background 0.15s}
-.connect-btn .arr{font-family:var(--font-mono);opacity:0.7}
-.connect-card.option-a .connect-btn{background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent-text)}
-.connect-card.option-a .connect-btn:hover{background:var(--accent-bg-hi);text-decoration:none}
-.connect-card.option-b .connect-btn{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text)}
-.connect-card.option-b .connect-btn:hover{background:rgba(188,140,255,0.18);text-decoration:none}
-.connect-ssh-cmd{margin-top:10px;background:#090d13;border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:var(--font-mono);font-size:12.5px;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:10px}
-.connect-ssh-cmd code{background:transparent;border:0;padding:0;color:var(--green-text);font-size:12.5px;word-break:break-all}
-.connect-ssh-cmd .mini-copy{font-family:var(--font-mono);font-size:11px;color:var(--accent);padding:4px 9px;border-radius:4px;border:1px solid var(--accent-border);background:var(--accent-bg);cursor:pointer;flex-shrink:0}
-.connect-ssh-cmd .mini-copy.copied{color:var(--green-text);border-color:var(--green-border);background:var(--green-bg)}
-.connect-card-meta{font-size:11.5px;color:var(--muted);margin-top:8px;font-family:var(--font-mono);letter-spacing:0.02em}
-.connect-pending{font-size:11.5px;color:var(--amber-text);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:99px;padding:3px 10px;font-family:var(--font-mono);display:inline-block;margin-top:8px}
-.term-controls{display:flex;gap:6px;font-size:11px}
-.term-ctl{padding:4px 10px;border-radius:4px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-family:var(--font-mono)}
-.term-ctl:hover{color:var(--text)}
-.term-status{font-size:11px;color:var(--muted);font-family:var(--font-mono);display:flex;align-items:center;gap:6px}
-.term-status .status-dot{width:6px;height:6px;border-radius:50%;background:var(--amber)}
-
-.checklist{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px}
-.checklist.prominent{background:var(--accent-bg);border-color:var(--accent-border)}
-.checklist-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.checklist-title{font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;font-family:var(--font-mono)}
-.checklist-progress{font-family:var(--font-mono);font-size:12px;color:var(--accent);font-weight:600}
-.checklist-progress.done{color:var(--green)}
-.checklist-item{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12.5px;color:var(--text);line-height:1.5}
-.checklist-item input{accent-color:var(--green)}
-.checklist-item.done{color:var(--muted);text-decoration:line-through}
-
-.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)}
-.modal-backdrop.open{display:flex}
-.modal{max-width:620px;width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
-.modal-title{font-size:18px;font-weight:500;color:var(--text-strong);margin-bottom:14px;display:flex;align-items:center;gap:10px}
-.modal-title::before{content:'✓';color:var(--green);font-family:var(--font-mono)}
-.modal-body{font-size:13px;line-height:1.8;color:var(--text)}
-.modal-body ul{list-style:none;padding:0;margin:10px 0}
-.modal-body ul li{padding:4px 0 4px 16px;position:relative}
-.modal-body ul li::before{content:'•';position:absolute;left:0;color:var(--accent)}
-.modal-body table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
-.modal-body table th,.modal-body table td{padding:7px 10px;border-bottom:1px solid var(--border);text-align:left}
-.modal-body table th{color:var(--muted);font-weight:500;background:var(--bg3)}
-.modal-close{margin-top:18px;padding:8px 18px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:13px;cursor:pointer}
-.modal-close:hover{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-border)}
-
-/* step number (h3 内に直接 ①②③ を表示) */
-.step-num{color:var(--accent);font-weight:600;margin-right:6px;font-size:18px;line-height:1;vertical-align:-1px}
-
-/* Objective grid */
-.obj-intro{font-size:14.5px;color:var(--text);font-weight:400;line-height:1.85;margin:14px 0 6px}
-.obj-intro strong{color:var(--text-strong);font-weight:600}
-.objective-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0 6px;position:relative}
-.obj-card{position:relative;background:linear-gradient(180deg,var(--bg2) 0%,var(--bg3) 100%);border:1px solid var(--border);border-radius:14px;padding:20px 14px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:11px;transition:transform 0.2s ease,border-color 0.2s ease,box-shadow 0.2s ease}
-.obj-card:hover{border-color:var(--accent-border);transform:translateY(-2px);box-shadow:0 6px 24px rgba(88,166,255,0.08)}
-.obj-icon{width:100%;min-height:84px;color:var(--text);background:var(--bg);border:1px solid var(--accent-border);border-radius:8px;padding:9px 11px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:4px;font-family:var(--font-mono);font-size:11.5px;line-height:1.5;letter-spacing:0;text-align:left;overflow:hidden;transition:border-color 0.2s ease,background 0.2s ease;position:relative}
-.obj-icon::before{content:'';position:absolute;top:0;left:0;right:0;height:14px;background:linear-gradient(180deg,var(--bg3) 0%,transparent 100%);opacity:0.55;pointer-events:none}
-.obj-icon .op-line{display:flex;align-items:center;gap:6px;white-space:nowrap}
-.obj-icon .op-prompt{color:var(--green);font-weight:600}
-.obj-icon .op-cmd{color:var(--purple);font-weight:600}
-.obj-icon .op-file{color:var(--text-strong)}
-.obj-icon .op-key{color:var(--amber);font-weight:700;font-size:12.5px;padding:1px 5px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:3px}
-.obj-icon .op-mode-bar{color:var(--green-text);font-weight:700;font-size:10.5px;letter-spacing:0.04em;background:rgba(63,185,80,0.1);border:1px solid var(--green-border);padding:2px 6px;border-radius:3px;text-align:center}
-.obj-icon .op-mode-bar.insert{color:var(--amber-text);background:rgba(210,153,34,0.12);border-color:var(--amber-border)}
-.obj-icon .op-mode-bar.cmd{color:var(--accent);background:var(--accent-bg);border-color:var(--accent-border)}
-.obj-icon .op-colon{color:var(--accent);font-weight:700}
-.obj-icon .op-hint{color:var(--muted);font-size:10px;letter-spacing:0.04em}
-.obj-icon .op-cursor{display:inline-block;width:6px;height:11px;background:var(--accent);vertical-align:-2px;margin-left:2px;animation:obj-blink 1.1s steps(2,end) infinite}
-.obj-icon .op-bar{display:inline-block;height:4px;background:var(--muted-dim);border-radius:99px;flex:none}
-.obj-icon .op-bar.w-full{width:78px}
-.obj-icon .op-bar.w-md{width:54px}
-.obj-icon .op-bar.w-sm{width:34px}
-@keyframes obj-blink{50%{opacity:0}}
-.obj-card:hover .obj-icon{border-color:var(--accent);background:#0a0f16}
-.obj-verb{font-size:19px;color:var(--text-strong);font-weight:500;letter-spacing:0.08em;margin:0;line-height:1.2}
-.obj-desc{font-size:13.5px;color:var(--text);font-weight:400;line-height:1.65;margin:0;min-height:46px;display:flex;align-items:center;justify-content:center}
-.obj-cmds{margin-top:auto;font-family:var(--font-mono);font-size:13.5px;font-weight:600;letter-spacing:0.08em;color:var(--text-strong);background:var(--accent-bg-hi);border:1px solid var(--accent);border-radius:99px;padding:7px 16px;white-space:nowrap}
-.obj-card:not(:last-child)::after{content:'';position:absolute;right:-10px;top:50%;width:10px;height:10px;transform:translateY(-50%) rotate(45deg);border-top:2px solid var(--accent);border-right:2px solid var(--accent);z-index:2}
-
-/* ── mode diagram (3 つのモード遷移図) ── */
-.mode-diagram{margin:20px 0;padding:18px 18px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:0}
-.mode-diagram-title{font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;font-family:var(--font-mono);margin-bottom:10px}
-.mode-box{padding:12px 18px;border-radius:10px;border:2px solid;text-align:center;background:var(--bg);min-width:220px}
-.mode-box .mode-name{font-family:var(--font-mono);font-weight:700;font-size:16px;letter-spacing:0.02em;margin-bottom:2px}
-.mode-box .mode-role{font-size:12.5px;color:var(--text);line-height:1.5}
-.mode-box.normal{border-color:var(--green);background:rgba(63,185,80,0.06)}
-.mode-box.normal .mode-name{color:var(--green-text)}
-.mode-box.insert{border-color:var(--amber);background:rgba(210,153,34,0.06)}
-.mode-box.insert .mode-name{color:var(--amber-text)}
-.mode-box.cmdline{border-color:var(--accent);background:var(--accent-bg)}
-.mode-box.cmdline .mode-name{color:var(--accent)}
-.mode-arrows-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;width:100%;max-width:520px;gap:0;margin:0}
-.mode-arrows-col{display:flex;flex-direction:column;align-items:center;padding:6px 0;position:relative;gap:2px}
-.mode-arrows-col .arr-key{font-family:var(--font-mono);font-size:12.5px;font-weight:600;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px 9px;color:var(--text-strong)}
-.mode-arrows-col .arr-key.esc{color:var(--green-text);border-color:var(--green-border);background:var(--green-bg)}
-.mode-arrows-col .arr-key.enter{color:var(--amber-text);border-color:var(--amber-border);background:var(--amber-bg)}
-.mode-arrows-col .arr-key.colon{color:var(--accent);border-color:var(--accent-border);background:var(--accent-bg)}
-.mode-arrows-col .arr-up,.mode-arrows-col .arr-down{font-size:16px;color:var(--text);line-height:1}
-.mode-arrows-center{display:flex;align-items:center;justify-content:center;padding:6px 0;font-size:10px;color:var(--muted-dim);font-family:var(--font-mono);letter-spacing:0.08em}
-.mode-bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;width:100%;max-width:520px}
-
-/* ── vim screen sample (実画面風モック) ── */
-.vim-screen{margin:14px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#090d13;font-family:var(--font-mono);font-size:12.5px;line-height:1.65}
-.vim-screen-head{background:var(--bg3);padding:5px 10px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);font-size:10.5px;color:var(--muted)}
-.vim-screen-head .traffic{display:flex;gap:4px}
-.vim-screen-head .traffic span{width:9px;height:9px;border-radius:50%}
-.vim-screen-head .traffic .r{background:#ef5350}
-.vim-screen-head .traffic .y{background:#ffb74d}
-.vim-screen-head .traffic .g{background:#66bb6a}
-.vim-screen-head .title{margin-left:8px;color:var(--text)}
-.vim-screen-body{padding:12px 14px 8px;color:var(--text);min-height:170px;display:flex;flex-direction:column;gap:0}
-.vim-screen-body .vline{display:flex;gap:10px;color:var(--text)}
-.vim-screen-body .vline .lnum{color:var(--muted-dim);width:24px;text-align:right;flex-shrink:0}
-.vim-screen-body .vline.tilde .lnum{color:transparent}
-.vim-screen-body .vline.tilde .ltxt{color:var(--accent);opacity:0.45}
-.vim-screen-body .vline .cur{display:inline-block;width:7px;height:14px;background:var(--text);vertical-align:-2px;animation:obj-blink 1.1s steps(2,end) infinite}
-.vim-screen-statusbar{background:var(--bg);border-top:1px solid var(--border);padding:5px 12px;display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-size:12.5px;min-height:30px}
-.vim-screen-statusbar .sb-left{font-weight:700;letter-spacing:0.02em}
-.vim-screen-statusbar .sb-right{color:var(--muted);font-size:11.5px}
-.vim-screen-statusbar.normal .sb-left{color:var(--muted-dim)}
-.vim-screen-statusbar.insert .sb-left{color:var(--amber-text)}
-.vim-screen-statusbar.cmdline .sb-left{color:var(--accent)}
-.vim-screen-statusbar.visual .sb-left{color:var(--purple-text)}
-.mode-tabs{display:flex;gap:6px;margin:10px 0 4px;flex-wrap:wrap}
-.mode-tab{font-family:var(--font-mono);font-size:12px;padding:6px 12px;border-radius:6px;background:var(--bg2);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all 0.15s}
-.mode-tab:hover{color:var(--text-strong);border-color:var(--accent-border)}
-.mode-tab.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:600}
-.mode-tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:0px}
-.mode-tab .dot.n{background:var(--muted)}
-.mode-tab .dot.i{background:var(--amber)}
-.mode-tab .dot.c{background:var(--accent)}
-.mode-tab .dot.v{background:var(--purple)}
-.vim-screen-explain{margin-top:8px;padding:10px 14px;background:var(--bg2);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:12.5px;color:var(--text);line-height:1.7}
-.vim-screen-explain strong{color:var(--text-strong)}
-
-@media (max-width:1100px){
-  .objective-grid{grid-template-columns:repeat(2,1fr);gap:14px 18px}
-  .obj-card:nth-child(2)::after{display:none}
-  .pane-wrap{grid-template-columns:1fr}
-  .content-pane{border-right:none}
-  .terminal-pane{position:static;height:auto;min-height:340px;border-top:1px solid var(--border)}
-  .mode-arrows-row{max-width:100%}
-  .mode-bottom-row{gap:14px}
-}
-@media (max-width:600px){
-  .objective-grid{grid-template-columns:1fr}
-  .obj-card::after{display:none}
-  .statusbar-mock{grid-template-columns:1fr}
-  .mode-bottom-row{grid-template-columns:1fr;gap:10px}
-}
 </style>
 </head>
 <body>
@@ -348,7 +53,11 @@ body{padding-bottom:64px}
   <!-- ── Content pane ── -->
   <main class="content-pane">
 
-    <h1>ファイルを書き換える（vim 入門）</h1>
+    <div class="chapter-hero">
+      <div class="chapter-eyebrow"><span class="chip">Part 1</span><span>Chapter 05</span><span class="sep">/</span><span>Linux 基礎</span></div>
+      <h1>ファイルを書き換える（vim 入門）</h1>
+      <p class="chapter-subtitle">ノーマルモード・インサートモード・コマンドラインモードという 3 つのモードの仕組みを理解し、vim でファイルを開いて編集・保存・終了できるようになります。</p>
+    </div>
 
     <table class="meta-table">
       <tr><th>所要時間</th><td>約 35 分</td></tr>
@@ -357,13 +66,13 @@ body{padding-bottom:64px}
       <tr><th>関連章</th><td>前: Chapter 4「テキストの検索と絞り込み」/ 後: Chapter 6「環境変数とシェルの仕組み」</td></tr>
     </table>
 
-    <h2>「読む」の先へ</h2>
+    <h2 data-num="01" data-label="Overview">「読む」の先へ</h2>
     <p>前の章まで、ファイルを「作り・動かし・読み・探す」ことができるようになりました。サーバに入って、ログから必要な情報を取り出せる ── ここまでで観察は十分できます。</p>
     <p>ただ、現場でやることの半分は <strong>「設定を変える」</strong> です。SSH の認証方式を変えたい、nginx の設定ファイルを編集したい、cron で動かすスクリプトを書きたい ── これらはすべてファイルを書き換える作業で、そのためには <strong>エディタ</strong> が要ります。</p>
     <div class="callout-key">Linux サーバの世界では <code>vim</code>（または <code>vi</code>）が事実上の標準エディタです。GUI が一切ない最小構成のサーバにも必ず入っています。<strong>Part 3 以降、SSH・nginx・cron の設定変更で毎回登場します</strong>。<br><br>
     最初の壁は「終了の仕方が分からない」── 原因はひとつ。vim は <strong>モード</strong> という仕組みを持つエディタで、<strong>今どのモードにいるかによって同じキーが違う動きをする</strong> からです。この仕組みさえ理解すれば、あとは自然に使えるようになります。</div>
 
-    <h2>この章を終えるとできること</h2>
+    <h2 data-num="02" data-label="Objectives">この章を終えるとできること</h2>
     <p class="obj-intro"><strong>vim 体験のフローは 4 ステップ</strong>。その裏側に <strong>3 つのモード</strong> が動いています（モードは次のセクションで詳しく扱います）。</p>
 
     <div class="objective-grid">
@@ -414,7 +123,7 @@ body{padding-bottom:64px}
 
     <p class="obj-intro">この 4 ステップの裏側で <strong>3 つのモード</strong>（ノーマル / インサート / コマンドライン）が切り替わります。<strong>モード遷移を把握できれば、vim は怖くなくなります</strong> ── これが次のセクションです。</p>
 
-    <h2>概念説明</h2>
+    <h2 data-num="03" data-label="Concepts">概念説明</h2>
 
     <h3>1. vim が「難しい」理由 ── モード</h3>
     <p>多くのエディタは「開けばすぐ文字を入力できる」です。vim はそうではありません。vim には <strong>3 つのモード</strong> があり、<strong>今どのモードにいるかで同じキーが違う動作をします</strong>。「<code>d</code> を押した」とき、ノーマルなら「削除しろという指示」、インサートなら「アルファベットの d を入力」── これが vim の核です。</p>
@@ -554,7 +263,7 @@ body{padding-bottom:64px}
     </table>
     <div class="callout-amber"><strong><code>:q!</code> を最初に覚える</strong> ── これさえ知っていれば、vim でどうにもならなくなることはありません。</div>
 
-    <h2>試してみよう：メモを書いて行編集を試す</h2>
+    <h2 data-num="04" data-label="Hands-on">試してみよう：メモを書いて行編集を試す</h2>
     <p>シナリオ: <strong>「learner01 への作業メモを vim で書き、行コピー・行削除・取り消しを体験する」</strong> ── 自分のホームに <code>memo.txt</code> を作り、書いて、ちょっと編集して、保存します。実際の設定ファイル編集と同じ流れを安全な環境で体験します。</p>
 
     <div class="fail-safe">
@@ -563,84 +272,100 @@ body{padding-bottom:64px}
       vim でどうにもならなくなったら <code>Esc</code> → <code>:q!</code> → <code>Enter</code> で強制終了 ── ファイルを作り直せばやり直せます。</p>
     </div>
 
-    <h3>まず learner01 に入る</h3>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash · workstation01 から SSH</span>
-        <button class="copy-btn" data-copy="ssh student@learner01">📋 コピー → 右ターミナルで Ctrl+V</button>
+    <section class="step-section step-start" data-step="1" data-total="8">
+      <h3 class="step-title">まず learner01 に入る</h3>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash · workstation01 から SSH</span>
+          <button class="copy-btn" data-copy="ssh student@learner01">📋 コピー → 右ターミナルで Ctrl+V</button>
+        </div>
+        <pre><span class="kw">ssh</span> student@learner01</pre>
       </div>
-      <pre><span class="kw">ssh</span> student@learner01</pre>
-    </div>
+    </section>
 
-    <h3><span class="step-num">①</span>開く ── vim でファイルを開く</h3>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash</span>
-        <button class="copy-btn" data-copy="vim ~/memo.txt">📋 コピー</button>
+    <section class="step-section" data-step="2" data-total="8">
+      <h3 class="step-title">開く ── vim でファイルを開く</h3>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash</span>
+          <button class="copy-btn" data-copy="vim ~/memo.txt">📋 コピー</button>
+        </div>
+        <pre><span class="kw">vim</span> ~/memo.txt</pre>
       </div>
-      <pre><span class="kw">vim</span> ~/memo.txt</pre>
-    </div>
-    <p>画面が切り替わります。<strong>左下を見てください</strong> ── 何も表示されていなければノーマルモードです。<strong>まだ文字は入力できません</strong>。</p>
+      <p>画面が切り替わります。<strong>左下を見てください</strong> ── 何も表示されていなければノーマルモードです。<strong>まだ文字は入力できません</strong>。</p>
+    </section>
 
-    <h3><span class="step-num">②</span>入力モードに入って 5 行書く</h3>
-    <p><code>i</code> を押します。<strong>左下に <code>-- INSERT --</code> と表示されれば成功</strong>。そのまま入力します。</p>
-    <div class="codeblock">
-      <div class="codeblock-head"><span>vim 内での入力（-- INSERT -- が出ている状態）</span></div>
-      <pre>learner01 へのメモ
+    <section class="step-section" data-step="3" data-total="8">
+      <h3 class="step-title">入力モードに入って 5 行書く</h3>
+      <p><code>i</code> を押します。<strong>左下に <code>-- INSERT --</code> と表示されれば成功</strong>。そのまま入力します。</p>
+      <div class="codeblock">
+        <div class="codeblock-head"><span>vim 内での入力（-- INSERT -- が出ている状態）</span></div>
+        <pre>learner01 へのメモ
 作成日: 2026-05-15
 担当: student
 状態: 演習中
 備考: vim を初めて使う</pre>
-    </div>
-    <p>書き終えたら <code>Esc</code> を押します。<code>-- INSERT --</code> が消えてノーマルモードに戻ります。</p>
+      </div>
+      <p>書き終えたら <code>Esc</code> を押します。<code>-- INSERT --</code> が消えてノーマルモードに戻ります。</p>
+    </section>
 
-    <h3><span class="step-num">③</span>編集モードで行を削除して取り消す</h3>
-    <p>カーソルを 5 行目「備考:」に移動します。</p>
-    <div class="codeblock">
-      <div class="codeblock-head"><span>vim 内でのキー操作（ノーマルモード）</span></div>
-      <pre><span class="key">G</span>          <span class="comment"># 末尾の行（5 行目）へジャンプ</span>
+    <section class="step-section" data-step="4" data-total="8">
+      <h3 class="step-title">編集モードで行を削除して取り消す</h3>
+      <p>カーソルを 5 行目「備考:」に移動します。</p>
+      <div class="codeblock">
+        <div class="codeblock-head"><span>vim 内でのキー操作（ノーマルモード）</span></div>
+        <pre><span class="key">G</span>          <span class="comment"># 末尾の行（5 行目）へジャンプ</span>
 <span class="key">dd</span>         <span class="comment"># 5 行目を削除（4 行になる）</span>
 <span class="key">u</span>          <span class="comment"># 取り消し（5 行目が復活する）</span></pre>
-    </div>
-    <p><code>u</code> で「やってしまった操作」を戻せる ── <strong>これが現場で vim を安心して使える理由のひとつ</strong>です。</p>
+      </div>
+      <p><code>u</code> で「やってしまった操作」を戻せる ── <strong>これが現場で vim を安心して使える理由のひとつ</strong>です。</p>
+    </section>
 
-    <h3><span class="step-num">④</span>行コピー → 貼り付け</h3>
-    <p>2 行目「作成日:」に移動し、ヤンクして貼り付けます。</p>
-    <div class="codeblock">
-      <div class="codeblock-head"><span>vim 内でのキー操作（ノーマルモード）</span></div>
-      <pre><span class="key">:2</span>         <span class="comment"># 2 行目へジャンプ（Enter で確定）</span>
+    <section class="step-section" data-step="5" data-total="8">
+      <h3 class="step-title">行コピー → 貼り付け</h3>
+      <p>2 行目「作成日:」に移動し、ヤンクして貼り付けます。</p>
+      <div class="codeblock">
+        <div class="codeblock-head"><span>vim 内でのキー操作（ノーマルモード）</span></div>
+        <pre><span class="key">:2</span>         <span class="comment"># 2 行目へジャンプ（Enter で確定）</span>
 <span class="key">yy</span>         <span class="comment"># 現在の行をコピー（ヤンク）</span>
 <span class="key">p</span>          <span class="comment"># 下に貼り付け</span></pre>
-    </div>
-    <p>「作成日: 2026-05-15」がもう 1 行コピーされて 3 行目に挿入されました。設定ファイルで「似た行をもう 1 個増やしてちょっと変える」── という実用パターンの基本動作です。</p>
+      </div>
+      <p>「作成日: 2026-05-15」がもう 1 行コピーされて 3 行目に挿入されました。設定ファイルで「似た行をもう 1 個増やしてちょっと変える」── という実用パターンの基本動作です。</p>
+    </section>
 
-    <h3><span class="step-num">⑤</span>行ジャンプを試す</h3>
-    <div class="codeblock">
-      <div class="codeblock-head"><span>vim 内でのキー操作（ノーマルモード）</span></div>
-      <pre><span class="key">:1</span>         <span class="comment"># 1 行目へ</span>
+    <section class="step-section" data-step="6" data-total="8">
+      <h3 class="step-title">行ジャンプを試す</h3>
+      <div class="codeblock">
+        <div class="codeblock-head"><span>vim 内でのキー操作（ノーマルモード）</span></div>
+        <pre><span class="key">:1</span>         <span class="comment"># 1 行目へ</span>
 <span class="key">G</span>          <span class="comment"># 末尾へ</span>
 <span class="key">gg</span>         <span class="comment"># 先頭へ</span></pre>
-    </div>
-    <p>数百行の設定ファイルを読むとき、<code>:142</code> のような行番号ジャンプが効きます。</p>
-
-    <h3><span class="step-num">⑥</span>終わる ── 保存して終了</h3>
-    <div class="codeblock">
-      <div class="codeblock-head"><span>vim 内でのキー操作</span></div>
-      <pre><span class="key">:wq</span>        <span class="comment"># 保存して終了</span></pre>
-    </div>
-    <p>vim が閉じてターミナルに戻ります。</p>
-
-    <h3><span class="step-num">⑦</span>確認</h3>
-    <div class="codeblock">
-      <div class="codeblock-head">
-        <span>bash</span>
-        <button class="copy-btn" data-copy="cat ~/memo.txt&#10;wc -l ~/memo.txt">📋 コピー</button>
       </div>
-      <pre><span class="kw">cat</span> ~/memo.txt
-<span class="kw">wc -l</span> ~/memo.txt    <span class="comment"># 6 行になっているはず（コピーで 1 行増えた）</span></pre>
-    </div>
+      <p>数百行の設定ファイルを読むとき、<code>:142</code> のような行番号ジャンプが効きます。</p>
+    </section>
 
-    <h2>詰まったら</h2>
+    <section class="step-section" data-step="7" data-total="8">
+      <h3 class="step-title">終わる ── 保存して終了</h3>
+      <div class="codeblock">
+        <div class="codeblock-head"><span>vim 内でのキー操作</span></div>
+        <pre><span class="key">:wq</span>        <span class="comment"># 保存して終了</span></pre>
+      </div>
+      <p>vim が閉じてターミナルに戻ります。</p>
+    </section>
+
+    <section class="step-section" data-step="8" data-total="8">
+      <h3 class="step-title">確認</h3>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>bash</span>
+          <button class="copy-btn" data-copy="cat ~/memo.txt&#10;wc -l ~/memo.txt">📋 コピー</button>
+        </div>
+        <pre><span class="kw">cat</span> ~/memo.txt
+<span class="kw">wc -l</span> ~/memo.txt    <span class="comment"># 6 行になっているはず（コピーで 1 行増えた）</span></pre>
+      </div>
+    </section>
+
+    <h2 data-num="05" data-label="Troubleshooting">詰まったら</h2>
     <ul class="bullets" style="margin-bottom:14px">
       <li><strong>段階ヒント</strong>: 定番の詰まりポイントへの段階開示。1 段 → 2 段 → 答え、と少しずつ開けます</li>
       <li><strong>AI に相談</strong>: Cloudflare Workers AI に自由質問できる相談窓口（v2 公開予定）</li>
@@ -707,7 +432,7 @@ learner01 へのメモ
       </div>
     </details>
 
-    <h3>🤖 AI に相談（v2 公開予定）</h3>
+    <h3>AI に相談（v2 公開予定）</h3>
     <div class="ai-chat-mock">
       <div class="ai-chat-head">
         <span class="ai-badge">準備中</span>
@@ -723,7 +448,7 @@ learner01 へのメモ
       </div>
     </div>
 
-    <h2>修了確認</h2>
+    <h2 data-num="06" data-label="Checkpoint">修了確認</h2>
     <p>学んだことが身についたか、2 問だけ確認してみましょう。</p>
 
     <div class="quiz">
@@ -742,7 +467,7 @@ learner01 へのメモ
       <button class="quiz-btn" data-modal="quiz2">考えました → 解答を見る</button>
     </div>
 
-    <h2>次の章へ</h2>
+    <h2 data-num="07" data-label="What's next">次の章へ</h2>
     <p>次は <strong>Chapter 6「環境変数とシェルの仕組み」</strong> です。</p>
     <p>vim でファイルを書き換えられるようになると、次に出てくる疑問は <strong>「どこに何を書けば反映されるのか」</strong> です。<code>.bashrc</code> と <code>.bash_profile</code> の違い、<code>PATH</code> を通す意味、<code>command not found</code> の原因 ── これらをひと通り整理します。</p>
 
@@ -751,56 +476,17 @@ learner01 へのメモ
   <!-- ── Terminal pane ── -->
   <aside class="terminal-pane">
     <div class="term-head">
-      <span class="label">⌨ 演習サーバへ接続する</span>
-      <span class="server-status" title="サーバの稼働状況（手動更新）"><span class="status-dot"></span>サーバ確認中</span>
+      <span class="label">📊 演習を進める</span>
+      <span class="server-status" title="演習サーバの稼働状況（手動更新）"><span class="status-dot"></span>サーバ確認中</span>
     </div>
 
-    <div class="connect-stack">
-
-      <div class="connect-card option-a">
-        <div class="connect-card-head">
-          <span class="connect-card-badge">Option A</span>
-          <span class="connect-card-title">🌐 ブラウザで開く（Guacamole）</span>
-        </div>
-        <div class="connect-card-desc">
-          <strong>環境構築不要・すぐ開始</strong>できます。新しいタブでブラウザ内ターミナルが起動します。初回は <strong>メール OTP 認証</strong> 画面が出ます。
-        </div>
-        <a href="https://lab.infra-study.org/guacamole/" target="_blank" rel="noopener" class="connect-btn">
-          <span>🚀 別タブで Guacamole を開く</span>
-          <span class="arr">↗</span>
-        </a>
-        <div class="connect-card-meta">lab.infra-study.org / workstation01 経由</div>
-      </div>
-
-      <div class="connect-card option-b">
-        <div class="connect-card-head">
-          <span class="connect-card-badge">Option B</span>
-          <span class="connect-card-title">💻 手元 PC から SSH</span>
-        </div>
-        <div class="connect-card-desc">
-          <strong>本物のサーバ管理者体験</strong>。Mac / Linux は標準の <code>ssh</code>、Windows は Teraterm / OpenSSH / PuTTY。<strong>SSH 鍵認証</strong>で接続します。
-        </div>
-        <div class="connect-ssh-cmd">
-          <code id="sshCmd">ssh -i ~/.ssh/infra_study alice@ssh.infra-study.org</code>
-          <button class="mini-copy" data-copy-ssh>📋</button>
-        </div>
-        <div class="connect-card-meta">Cloudflare Tunnel TCP 経由 / 鍵認証のみ</div>
-        <span class="connect-pending">⏳ Phase B 準備中（受講者鍵配布フロー設計中）</span>
-      </div>
-
-      <div class="connect-card" style="border-left:3px solid var(--green)">
-        <div class="connect-card-head">
-          <span class="connect-card-badge" style="background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text)">手順</span>
-          <span class="connect-card-title">📋 接続後の流れ</span>
-        </div>
-        <div class="connect-card-desc" style="margin-bottom:0">
-          <strong>1.</strong> 上の A または B で <code>alice@workstation01:~$</code> に到達<br>
-          <strong>2.</strong> 踏み台から <code>ssh student@learner01</code> でジャンプ<br>
-          <strong>3.</strong> <code>student@learner01:~$</code> で演習開始
-        </div>
-      </div>
-
-    </div>
+    <a href="connect.html" class="connect-banner" title="演習サーバへの接続方法（オンボーディング）">
+      <span class="banner-icon">⌨</span>
+      <span class="banner-text">演習サーバへの接続方法
+        <span class="banner-sub">Guacamole / SSH / 接続後フロー</span>
+      </span>
+      <span class="banner-arr">→</span>
+    </a>
 
     <div class="checklist prominent">
       <div class="checklist-head">
@@ -812,6 +498,9 @@ learner01 へのメモ
       <label class="checklist-item"><input type="checkbox"> <code>yy → p</code> で行コピー貼り付けを試した</label>
       <label class="checklist-item"><input type="checkbox"> <code>:wq</code> で保存して終了し、<code>cat</code> で確認した</label>
     </div>
+
+    <!-- Part 別チートシートスロット -->
+    <div class="cheat-slot"></div>
   </aside>
 
 </div>
@@ -871,107 +560,7 @@ learner01 へのメモ
   </div>
 </div>
 
-<script>
-document.querySelectorAll('.copy-btn').forEach(btn=>{
-  btn.addEventListener('click',async()=>{
-    const text=btn.dataset.copy.replace(/&#10;/g,'\n');
-    try{
-      await navigator.clipboard.writeText(text);
-      const orig=btn.textContent;
-      btn.textContent='✓ コピー済み';
-      btn.classList.add('copied');
-      setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},2000);
-    }catch(e){console.error(e);}
-  });
-});
-
-// SSH command mini copy
-document.querySelectorAll('[data-copy-ssh]').forEach(btn=>{
-  btn.addEventListener('click',async()=>{
-    const cmd=document.getElementById('sshCmd');
-    if(!cmd)return;
-    try{
-      await navigator.clipboard.writeText(cmd.textContent.trim());
-      btn.textContent='✓';
-      btn.classList.add('copied');
-      setTimeout(()=>{btn.textContent='📋';btn.classList.remove('copied');},1500);
-    }catch(e){console.error(e);}
-  });
-});
-
-document.querySelectorAll('[data-modal]').forEach(b=>{
-  b.addEventListener('click',()=>{
-    const m=document.getElementById('modal-'+b.dataset.modal);
-    if(m)m.classList.add('open');
-  });
-});
-document.querySelectorAll('[data-close]').forEach(b=>{
-  b.addEventListener('click',()=>b.closest('.modal-backdrop').classList.remove('open'));
-});
-document.querySelectorAll('.modal-backdrop').forEach(m=>{
-  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
-});
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape')document.querySelectorAll('.modal-backdrop.open').forEach(m=>m.classList.remove('open'));
-});
-
-// vim screen mode tabs
-const vimModeData={
-  normal:{
-    left:'（何も表示なし）',
-    right:'"memo.txt" 3L, 56B&nbsp;&nbsp;&nbsp;2,8&nbsp;&nbsp;Top',
-    explain:'<strong>ノーマルモード</strong>： 左下には何も表示されません。起動直後はここから始まります。<code>h j k l</code> で移動、<code>dd</code> で削除、<code>i</code> でインサートへ。'
-  },
-  insert:{
-    left:'-- INSERT --',
-    right:'2,8&nbsp;&nbsp;Top',
-    explain:'<strong>インサートモード</strong>： 左下に <code>-- INSERT --</code> と表示されます。普通にキーボードを打てば、その文字がカーソル位置に入ります。終わったら <code>Esc</code> でノーマルへ戻る。'
-  },
-  cmdline:{
-    left:':wq_',
-    right:'',
-    explain:'<strong>コマンドラインモード</strong>： <code>:</code> を押すと左下にカーソルが移り、そこにコマンドを入力します。<code>:wq</code> で保存して終了、<code>:q!</code> で強制終了、<code>:30</code> で 30 行目へジャンプ。<code>Enter</code> で実行、<code>Esc</code> で取り消し。'
-  },
-  visual:{
-    left:'-- VISUAL --',
-    right:'2,8-15&nbsp;&nbsp;Top',
-    explain:'<strong>ビジュアルモード</strong>： <code>v</code> で入る範囲選択モードです。本章では使いませんが、<code>-- VISUAL --</code> と表示されているのを見たら「範囲選択中」と思って <code>Esc</code> で戻れば OK。'
-  }
-};
-const vimSb=document.getElementById('vimStatusbar');
-const vimSbLeft=document.getElementById('vimSbLeft');
-const vimSbRight=document.getElementById('vimSbRight');
-const vimExplain=document.getElementById('vimExplain');
-const vimCursor=document.getElementById('vimCursor');
-document.querySelectorAll('.mode-tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    const mode=tab.dataset.vimMode;
-    document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
-    tab.classList.add('active');
-    vimSb.className='vim-screen-statusbar '+mode;
-    vimSbLeft.innerHTML=vimModeData[mode].left;
-    vimSbRight.innerHTML=vimModeData[mode].right;
-    vimExplain.innerHTML=vimModeData[mode].explain;
-    if(vimCursor){vimCursor.style.display=(mode==='cmdline')?'none':'inline-block';}
-  });
-});
-
-const checklistItems=document.querySelectorAll('.checklist-item input');
-const checklistProgress=document.getElementById('checklistProgress');
-const progressFill=document.getElementById('progressFill');
-const progressText=document.getElementById('progressText');
-function updateProgress(){
-  const done=Array.from(checklistItems).filter(c=>c.checked).length;
-  const total=checklistItems.length;
-  const pct=Math.round((done/total)*100);
-  if(checklistProgress){checklistProgress.textContent=done+' / '+total;checklistProgress.classList.toggle('done',done===total);}
-  if(progressFill)progressFill.style.width=pct+'%';
-  if(progressText){progressText.textContent=done+' / '+total;progressText.style.color=done===total?'var(--green-text)':'var(--muted)';}
-}
-checklistItems.forEach(c=>{
-  c.addEventListener('change',()=>{c.closest('.checklist-item').classList.toggle('done',c.checked);updateProgress();});
-});
-</script>
+<script src="chapter.js"></script>
 
 </body>
 </html>

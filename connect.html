@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>演習サーバ接続オンボーディング — infra-study.org</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+:root{
+  --bg:#0d1117; --bg2:#161b22; --bg3:#1c2230; --border:#2a3441;
+  --text:#e2eaf3; --text-strong:#e6edf3; --muted:#9aacbc; --muted-dim:#3a4a5c;
+  --accent:#58a6ff; --green:#3fb950; --amber:#d29922; --purple:#bc8cff; --coral:#f78166; --red:#f85149;
+  --accent-bg:#1c2d3d; --accent-bg-hi:#1e3550; --accent-border:#2a4060; --accent-text:#8ecbff;
+  --green-bg:#1c2616; --green-border:#2a4020; --green-text:#6fd672;
+  --amber-bg:#1c1a0d; --amber-border:#3a3010;
+  --purple-bg:#1c1830; --purple-border:#3a2860; --purple-text:#c4b5fd;
+  --coral-bg:#1c0e0a; --coral-border:#3a1a10;
+  --font-sans:'Noto Sans JP',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-weight:300;font-size:14px;line-height:1.7}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+strong{color:var(--text-strong);font-weight:500}
+code{font-family:var(--font-mono);font-size:12px;background:var(--bg);border:1px solid var(--border);padding:1px 5px;border-radius:4px;color:var(--purple)}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+.site-header{position:sticky;top:0;z-index:50;background:rgba(13,17,23,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
+.header-inner{max-width:min(96vw,1200px);margin:0 auto;height:60px;padding:0 24px;display:flex;align-items:center;gap:32px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{width:28px;height:28px;border-radius:6px;background:var(--accent-bg);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:600;color:var(--accent);font-size:13px}
+.brand-text{display:flex;flex-direction:column;line-height:1.15}
+.brand-name{font-size:13px;color:var(--text-strong);font-weight:500}
+.brand-domain{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+.crumb{font-size:13px;color:var(--muted)}
+.crumb .sep{color:var(--muted-dim);margin:0 6px}
+.crumb .now{color:var(--text-strong)}
+
+main{max-width:min(94vw,1200px);margin:0 auto;padding:32px 24px 80px}
+
+.hero{padding:36px 0 28px;border-bottom:1px solid var(--border);margin-bottom:36px}
+.hero-eyebrow{font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:0.18em;font-weight:600;margin-bottom:10px;display:inline-flex;align-items:center;gap:8px}
+.hero-eyebrow::before{content:"";width:18px;height:1px;background:var(--accent)}
+.hero h1{font-size:30px;font-weight:500;color:var(--text-strong);margin-bottom:14px;letter-spacing:0.01em}
+.hero-sub{font-size:15px;color:var(--muted);max-width:780px;line-height:1.8}
+
+section{margin-bottom:44px}
+section h2{font-size:18px;font-weight:500;color:var(--text-strong);margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:14px}
+section h2 .sec-num{font-family:var(--font-mono);font-size:13px;color:var(--accent);letter-spacing:0.06em;font-weight:600}
+section h2 .sec-label{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.12em;font-weight:600;text-transform:uppercase;margin-left:auto}
+
+.connect-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.connect-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:22px 22px 24px;position:relative;transition:border-color 0.2s ease}
+.connect-card.option-a{border-left:4px solid var(--accent)}
+.connect-card.option-b{border-left:4px solid var(--purple)}
+.connect-card-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.connect-card-badge{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.08em;padding:3px 10px;border-radius:99px;text-transform:uppercase}
+.connect-card.option-a .connect-card-badge{background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent)}
+.connect-card.option-b .connect-card-badge{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text)}
+.connect-card-title{font-size:17px;color:var(--text-strong);font-weight:500}
+.connect-card-desc{font-size:13.5px;color:var(--text);line-height:1.85;margin-bottom:14px}
+.connect-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:8px;font-family:var(--font-mono);font-size:13px;font-weight:600;letter-spacing:0.02em;transition:background 0.2s ease}
+.connect-card.option-a .connect-btn{background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent-text)}
+.connect-card.option-a .connect-btn:hover{background:var(--accent-bg-hi);text-decoration:none}
+.connect-card.option-b .connect-btn{background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--purple-text)}
+.connect-card-meta{font-size:11.5px;color:var(--muted);margin-top:10px;font-family:var(--font-mono);letter-spacing:0.02em}
+.connect-ssh-cmd{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-family:var(--font-mono);font-size:12px;margin-bottom:10px}
+.connect-ssh-cmd code{background:none;border:none;padding:0;color:var(--text)}
+.connect-pending{display:inline-block;font-size:11px;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border);padding:3px 10px;border-radius:99px;margin-top:6px;font-family:var(--font-mono);letter-spacing:0.04em}
+
+.flow-row{display:flex;align-items:center;gap:14px;padding:18px 22px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;flex-wrap:wrap}
+.flow-step{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text)}
+.flow-num{width:28px;height:28px;border-radius:50%;background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:600;font-size:13px}
+.flow-arr{color:var(--muted-dim);font-size:18px;font-family:var(--font-mono)}
+
+.trouble-list{display:flex;flex-direction:column;gap:12px}
+.trouble-item{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--coral);border-radius:8px;padding:14px 18px}
+.trouble-item h3{font-size:14px;color:var(--text-strong);font-weight:500;margin-bottom:6px}
+.trouble-item p{font-size:13px;color:var(--text);line-height:1.75}
+
+.back-banner{display:inline-flex;align-items:center;gap:10px;padding:11px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--muted);margin-top:36px;font-family:var(--font-mono)}
+.back-banner:hover{border-color:var(--accent);background:var(--accent-bg);text-decoration:none}
+
+/* ── Part 別アコーディオン (詳細は _ui-wireframe.md 第 12.7 節) ── */
+.parts-intro{font-size:13px;color:var(--muted);background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:18px;line-height:1.8}
+.parts-intro strong{color:var(--text-strong);font-weight:500}
+.part-acc{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px}
+.part-acc summary{padding:14px 20px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:14px;flex-wrap:wrap;transition:background 0.2s ease}
+.part-acc summary::-webkit-details-marker{display:none}
+.part-acc summary::before{content:"▶";color:var(--muted-dim);font-size:11px;width:14px}
+.part-acc[open] summary::before{content:"▼";color:var(--accent)}
+.part-acc summary:hover{background:var(--bg3)}
+.part-num{font-family:var(--font-mono);font-size:11px;color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:3px 9px;border-radius:99px;letter-spacing:0.06em;font-weight:600}
+.part-title{font-size:15px;color:var(--text-strong);font-weight:500}
+.part-meta{margin-left:auto;font-size:11.5px;color:var(--muted);font-family:var(--font-mono);letter-spacing:0.02em}
+.part-acc .part-body{padding:16px 24px 22px;border-top:1px solid var(--border);font-size:13px;color:var(--text);line-height:1.85}
+.placeholder{color:var(--muted);font-style:italic;background:var(--bg);border:1px dashed var(--border);padding:14px 16px;border-radius:8px;font-size:12.5px;line-height:1.7}
+.placeholder strong{color:var(--amber);font-style:normal;font-weight:600;font-family:var(--font-mono);font-size:11px;letter-spacing:0.06em}
+
+@media (max-width:760px){
+  .connect-grid{grid-template-columns:1fr}
+  .flow-row{flex-direction:column;align-items:flex-start}
+  .flow-arr{transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <div class="brand-mark">i:</div>
+      <div class="brand-text">
+        <div class="brand-name">infra-study.org</div>
+        <div class="brand-domain">Day 1 オンボーディング</div>
+      </div>
+    </a>
+    <div class="crumb">
+      <a href="index.html">トップ</a><span class="sep">/</span><span class="now">演習サーバ接続オンボーディング</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div class="hero">
+    <div class="hero-eyebrow">⌨ DAY 1 · ONBOARDING</div>
+    <h1>演習サーバへ接続する</h1>
+    <p class="hero-sub">
+      infra-study.org の演習はすべて、あなた専用の <strong>演習サーバ (workstation01 / learner01)</strong> 上で行います。
+      接続方法は <strong>2 通り</strong>。どちらでも演習はできるので、自分に合う方を選んでください。
+      初めての方は <strong>Option A (ブラウザ)</strong> がおすすめです。
+    </p>
+  </div>
+
+  <section>
+    <h2><span class="sec-num">§ 01</span> 接続方法を選ぶ <span class="sec-label">2 OPTIONS</span></h2>
+
+    <div class="connect-grid">
+
+      <div class="connect-card option-a">
+        <div class="connect-card-head">
+          <span class="connect-card-badge">Option A</span>
+          <span class="connect-card-title">🌐 ブラウザで開く（Guacamole）</span>
+        </div>
+        <div class="connect-card-desc">
+          <strong>環境構築不要・すぐ開始</strong>できます。新しいタブでブラウザ内ターミナルが起動します。<br>
+          初回は <strong>メール OTP 認証</strong> 画面が出ます（Cloudflare Access）。受信メールに届く 6 桁コードを入力してください。
+        </div>
+        <a href="https://lab.infra-study.org/guacamole/" target="_blank" rel="noopener" class="connect-btn">
+          <span>🚀 別タブで Guacamole を開く</span>
+          <span>↗</span>
+        </a>
+        <div class="connect-card-meta">lab.infra-study.org / workstation01 経由</div>
+      </div>
+
+      <div class="connect-card option-b">
+        <div class="connect-card-head">
+          <span class="connect-card-badge">Option B</span>
+          <span class="connect-card-title">💻 手元 PC から SSH</span>
+        </div>
+        <div class="connect-card-desc">
+          <strong>本物のサーバ管理者体験</strong>。Mac / Linux は標準の <code>ssh</code>、Windows は Teraterm / OpenSSH / PuTTY。<strong>SSH 鍵認証</strong>で接続します。
+        </div>
+        <div class="connect-ssh-cmd">
+          <code>ssh -i ~/.ssh/infra_study alice@ssh.infra-study.org</code>
+        </div>
+        <div class="connect-card-meta">Cloudflare Tunnel TCP 経由 / 鍵認証のみ</div>
+        <span class="connect-pending">⏳ Phase B 準備中（受講者鍵配布フロー設計中）</span>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="sec-num">§ 02</span> 接続後の流れ <span class="sec-label">FLOW</span></h2>
+
+    <div class="flow-row">
+      <span class="flow-step"><span class="flow-num">1</span>上の A または B で <code>alice@workstation01:~$</code> に到達</span>
+      <span class="flow-arr">→</span>
+      <span class="flow-step"><span class="flow-num">2</span>踏み台から <code>ssh student@learner01</code> でジャンプ</span>
+      <span class="flow-arr">→</span>
+      <span class="flow-step"><span class="flow-num">3</span><code>student@learner01:~$</code> で演習開始</span>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="sec-num">§ 03</span> 接続できないとき <span class="sec-label">TROUBLESHOOTING</span></h2>
+
+    <div class="trouble-list">
+      <div class="trouble-item">
+        <h3>OTP メールが届かない</h3>
+        <p>迷惑メールフォルダを確認。それでも来ない場合は数分待ってから再送信。届くメールアドレスを変えたい場合はトップから問い合わせ。</p>
+      </div>
+      <div class="trouble-item">
+        <h3>Guacamole 画面が真っ黒</h3>
+        <p>workstation01 / learner01 が停止している可能性。右上の <strong>サーバ稼働状況ドット</strong> を確認。停止中の表示が出ていたら稼働を待つ（手動運用）。</p>
+      </div>
+      <div class="trouble-item">
+        <h3>SSH で <code>Permission denied (publickey)</code></h3>
+        <p>SSH 鍵が登録されていない / 鍵パスが間違っている / Phase B 準備中で鍵配布が未完了。Option A (Guacamole) で開始してください。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="sec-num">§ 04</span> Part 別の接続追加情報 <span class="sec-label">PART-SPECIFIC</span></h2>
+
+    <div class="parts-intro">
+      <strong>あなたが今学習中の Part だけ開いてください。</strong>各 Part で追加で接続が必要な機器・URL・ツール情報をまとめています。
+      Part 1（Linux 基礎）は <code>§ 01-§ 03</code> だけで完結します。
+    </div>
+
+    <details class="part-acc">
+      <summary>
+        <span class="part-num">PART 2</span>
+        <span class="part-title">ネットワーク基礎</span>
+        <span class="part-meta">l3router01 SSH / TP-Link Web UI</span>
+      </summary>
+      <div class="part-body">
+        <div class="placeholder">
+          <strong>PLACEHOLDER · TECH/NETWORK が Part 2 着手時に記入</strong><br><br>
+          想定: <code>ssh ops@l3router01</code>（workstation01 踏み台経由 / VM-111 / FRRouting）<br>
+          想定: TP-Link TL-SG108E Web 管理 UI（ブラウザで <code>http://192.168.1.x</code> / VLAN 設定のみ）
+        </div>
+      </div>
+    </details>
+
+    <details class="part-acc">
+      <summary>
+        <span class="part-num">PART 3</span>
+        <span class="part-title">サーバ運用</span>
+        <span class="part-meta">learner01 SSH（Part 1 と同じ）</span>
+      </summary>
+      <div class="part-body">
+        <div class="placeholder">
+          <strong>PLACEHOLDER · TECH/SERVER が Part 3 着手時に記入</strong><br><br>
+          想定: learner01 SSH 接続だけで完結（cron / systemd / シェルスクリプト演習）<br>
+          想定: 接続情報は § 01-§ 03 と同じ。追加情報があればここに
+        </div>
+      </div>
+    </details>
+
+    <details class="part-acc">
+      <summary>
+        <span class="part-num">PART 4 · WEB</span>
+        <span class="part-title">nginx でサイトを公開する</span>
+        <span class="part-meta">SSH + ブラウザ HTTP アクセス</span>
+      </summary>
+      <div class="part-body">
+        <div class="placeholder">
+          <strong>PLACEHOLDER · TECH/WEB が Part 4 着手時に記入</strong><br><br>
+          想定: SSH 系統 = learner01 で <code>/etc/nginx/</code> 編集<br>
+          想定: HTTP 系統 = 受講者ブラウザから <code>http://learner01:8080</code> へ直接アクセス<br>
+          想定: 設定編集 → <code>nginx -t</code> → reload → ブラウザ確認のサイクル
+        </div>
+      </div>
+    </details>
+
+    <details class="part-acc">
+      <summary>
+        <span class="part-num">PART 4 · DB</span>
+        <span class="part-title">PostgreSQL でデータを扱う</span>
+        <span class="part-meta">SSH + psql</span>
+      </summary>
+      <div class="part-body">
+        <div class="placeholder">
+          <strong>PLACEHOLDER · TECH/DB が Part 4 着手時に記入</strong><br><br>
+          想定: SSH で learner01 に入り <code>psql -U postgres</code> / <code>sudo -u postgres psql</code><br>
+          想定: 接続文字列早見表（ホスト / ポート 5432 / ユーザ / DB 名）<br>
+          想定: 基本チートシート <code>\l \dt \d tablename \q</code>
+        </div>
+      </div>
+    </details>
+
+    <details class="part-acc">
+      <summary>
+        <span class="part-num">PART 5</span>
+        <span class="part-title">BGP・動的ルーティング</span>
+        <span class="part-meta">l3router01 + 仮想ルータ複数</span>
+      </summary>
+      <div class="part-body">
+        <div class="placeholder">
+          <strong>PLACEHOLDER · TECH/NETWORK が Part 5 着手時に記入</strong><br><br>
+          想定: AS 番号・neighbor IP 早見表<br>
+          想定: <code>vtysh -c "show ip bgp summary"</code> 等の vtysh コマンド集
+        </div>
+      </div>
+    </details>
+
+    <details class="part-acc">
+      <summary>
+        <span class="part-num">PART 6</span>
+        <span class="part-title">ネットワーク障害対応</span>
+        <span class="part-meta">複数経路 + 切り分けツール</span>
+      </summary>
+      <div class="part-body">
+        <div class="placeholder">
+          <strong>PLACEHOLDER · CONTENT/TECH-NETWORK が Part 6 着手時に記入</strong><br><br>
+          想定: 障害切り分けチェックリスト（物理 → L3 → アプリの順）<br>
+          想定: <code>ping</code> / <code>traceroute</code> / <code>mtr</code> / <code>tcpdump</code> 起動先の整理
+        </div>
+      </div>
+    </details>
+
+    <details class="part-acc">
+      <summary>
+        <span class="part-num">PART 7</span>
+        <span class="part-title">監視</span>
+        <span class="part-meta">Grafana / Prometheus ブラウザアクセス</span>
+      </summary>
+      <div class="part-body">
+        <div class="placeholder">
+          <strong>PLACEHOLDER · TECH/SERVER が Part 7 着手時に記入</strong><br><br>
+          想定: Grafana <code>http://learner01:3000</code> / Prometheus <code>http://learner01:9090</code><br>
+          想定: アラート状態（Firing / Pending / Inactive）の見方<br>
+          想定: 自分の VM IP 確認コマンド（ポートは固定 / IP は受講者ごとに異なる）
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <a href="index.html" class="back-banner">← トップに戻る</a>
+
+</main>
+
+</body>
+</html>
